@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+enum Plan {
+  BASIC
+  PREMIUM
+}
+
+enum RiskLevel {
+  DANGER
+  WARNING
+  NEUTRAL
+  RELIABLE
+  SAFE
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+}
+
+model Tenant {
+  id               String             @id @default(uuid())
+  supabase_user_id String             @unique
+  name             String
+  phone            String?
+  plan             Plan               @default(PREMIUM)
+  shop_limit       Int                @default(1)
+  subscription_status SubscriptionStatus @default(TRIAL)
+  trial_ends_at    DateTime?
+  subscribed_at    DateTime?
+  admin_notes      String?
+  created_at       DateTime           @default(now())
+
+  shops     Shop[]
+  customers Customer[]
+}
+
+model Shop {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  name       String
+  address    String?
+  phone      String?
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  tenant   Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  sales    Sale[]
+  advances Advance[]
+}
+
+model Customer {
+  id        String  @id @default(uuid())
+  tenant_id String
+  name      String
+  aadhaar   String?
+  photo_url String?
+
+  mobile1       String
+  mobile2       String?
+  mobile2_label String?  @default("Father")
+  mobile3       String?
+  mobile3_label String?  @default("Mother")
+  mobile4       String?
+  mobile4_label String?  @default("Friend")
+
+  risk_level RiskLevel @default(NEUTRAL)
+  risk_score Float?
+
+  created_at DateTime @default(now())
+
+  tenant             Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  sales              Sale[]   @relation("PrimarySales")
+  second_party_sales Sale[]   @relation("SecondPartySales")
+
+  @@unique([tenant_id, aadhaar])
+}
+
+model Sale {
+  id          String   @id @default(uuid())
+  shop_id     String
+  customer_id String
+
+  loan_issue_date  DateTime
+  down_payment     Decimal
+  loan_amount      Decimal
+  tenure_months    Int
+  emi_amount       Decimal
+
+  device_name      String
+  imei             String?
+  reference_number String?
+
+  co_name   String?
+  co_mobile String?
+
+  is_second_party          Boolean @default(false)
+  second_party_customer_id String?
+
+  notes      String?
+  created_at DateTime @default(now())
+
+  shop                  Shop      @relation(fields: [shop_id], references: [id], onDelete: Cascade)
+  customer              Customer  @relation("PrimarySales", fields: [customer_id], references: [id])
+  second_party_customer Customer? @relation("SecondPartySales", fields: [second_party_customer_id], references: [id])
+  advances              Advance[]
+}
+
+model Advance {
+  id      String @id @default(uuid())
+  shop_id String
+  sale_id String
+
+  paid_date     DateTime
+  amount_paid   Decimal
+
+  repaid_date   DateTime?
+  amount_repaid Decimal?
+
+  note       String?
+  created_at DateTime @default(now())
+
+  shop Shop @relation(fields: [shop_id], references: [id], onDelete: Cascade)
+  sale Sale @relation(fields: [sale_id], references: [id], onDelete: Cascade)
+}
