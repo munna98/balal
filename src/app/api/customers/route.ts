@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 
@@ -22,8 +23,11 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const search = (searchParams.get('search') || '').trim()
+    const mode = searchParams.get('mode')
+    const limitParam = Number(searchParams.get('limit') || '')
+    const take = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : undefined
 
-    const customers = await prisma.customer.findMany({
+    const args: Prisma.CustomerFindManyArgs = {
       where: {
         tenant_id: tenantId,
         ...(search
@@ -35,11 +39,26 @@ export async function GET(request: Request) {
             }
           : {}),
       },
-      include: {
-        _count: { select: { sales: true } },
-      },
       orderBy: { created_at: 'desc' },
-    })
+      ...(take ? { take } : {}),
+      ...(mode === 'lookup'
+        ? {
+            select: {
+              id: true,
+              name: true,
+              photo_url: true,
+              mobile1: true,
+              risk_level: true,
+            },
+          }
+        : {
+            include: {
+              _count: { select: { sales: true } },
+            },
+          }),
+    }
+
+    const customers = await prisma.customer.findMany(args)
 
     return NextResponse.json({ data: customers, error: null })
   } catch {

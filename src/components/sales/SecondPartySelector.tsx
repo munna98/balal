@@ -1,38 +1,27 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import type { Customer } from '@/types'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { CustomerForm } from '@/components/customers/CustomerForm'
+import { CustomerLookupField, type CustomerLookupItem } from '@/components/customers/CustomerLookupField'
 
 export function SecondPartySelector({
-  customers,
-  selectedCustomerId,
+  selectedCustomer,
+  excludedCustomerIds = [],
   enabled,
   onEnabledChange,
   onSelect,
 }: {
-  customers: Customer[]
-  selectedCustomerId: string | null
+  selectedCustomer: CustomerLookupItem | null
+  excludedCustomerIds?: string[]
   enabled: boolean
   onEnabledChange: (value: boolean) => void
-  onSelect: (customerId: string | null) => void
+  onSelect: (customer: CustomerLookupItem | null) => void
 }) {
-  const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
-  const [localCustomers, setLocalCustomers] = useState(customers)
-
-  const filtered = useMemo(
-    () =>
-      localCustomers.filter((customer) =>
-        `${customer.name} ${customer.mobile1}`.toLowerCase().includes(query.toLowerCase())
-      ),
-    [localCustomers, query]
-  )
 
   async function createCustomer(values: { name: string; mobile1: string; aadhaar?: string }) {
     const response = await fetch('/api/customers', {
@@ -40,10 +29,21 @@ export function SecondPartySelector({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(values),
     })
-    const json = (await response.json()) as { data?: { customer?: Customer } }
+    const json = (await response.json()) as {
+      data?: {
+        customer?: {
+          id: string
+          name: string
+          mobile1: string
+          photo_url: string | null
+          risk_level: CustomerLookupItem['risk_level']
+        }
+      }
+    }
+
     if (!response.ok || !json.data?.customer) return
-    setLocalCustomers((prev) => [json.data!.customer!, ...prev])
-    onSelect(json.data.customer.id)
+
+    onSelect(json.data.customer)
     setOpen(false)
   }
 
@@ -63,29 +63,12 @@ export function SecondPartySelector({
 
       {enabled ? (
         <div className="space-y-2">
-          <Input
-            placeholder="Search customer by name or mobile"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
+          <CustomerLookupField
+            label="Second party customer"
+            selectedCustomer={selectedCustomer}
+            onSelect={onSelect}
+            excludeIds={excludedCustomerIds}
           />
-          <div className="max-h-52 space-y-1 overflow-y-auto rounded-md border p-2">
-            {filtered.length ? (
-              filtered.map((customer) => (
-                <button
-                  key={customer.id}
-                  type="button"
-                  className={`w-full rounded-md px-2 py-1 text-left text-sm hover:bg-muted ${
-                    selectedCustomerId === customer.id ? 'bg-muted' : ''
-                  }`}
-                  onClick={() => onSelect(customer.id)}
-                >
-                  {customer.name} - {customer.mobile1}
-                </button>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No matching customers.</p>
-            )}
-          </div>
           <Button type="button" variant="outline" onClick={() => setOpen(true)}>
             Create new customer
           </Button>

@@ -56,7 +56,7 @@ function CustomerActions({ customer }: { customer: CustomerRow }) {
       }
       toast.success('Customer deleted successfully')
       router.refresh()
-    } catch (e) {
+    } catch {
       toast.error('An error occurred during deletion')
     } finally {
       setIsDeleting(false)
@@ -68,7 +68,7 @@ function CustomerActions({ customer }: { customer: CustomerRow }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="size-8 p-0">
+          <Button variant="ghost" className="size-8 rounded-full p-0">
             <span className="sr-only">Open menu</span>
             <MoreHorizontal className="size-4" />
           </Button>
@@ -102,7 +102,7 @@ function CustomerActions({ customer }: { customer: CustomerRow }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{customer.name}". If this customer has existing sales, the deletion will fail.
+              This will permanently delete &quot;{customer.name}&quot;. If this customer has existing sales, the deletion will fail.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -127,22 +127,20 @@ function CustomerActions({ customer }: { customer: CustomerRow }) {
 export function CustomersDataTable({ customers }: { customers: CustomerRow[] }) {
   const columns: DataTableColumn<CustomerRow>[] = [
     {
-      key: 'photo_url',
-      header: 'Photo',
-      render: (row) => (
-        <Avatar className="size-8">
-          {row.photo_url ? <AvatarImage src={row.photo_url} alt={row.name} /> : null}
-          <AvatarFallback>Photo</AvatarFallback>
-        </Avatar>
-      ),
-    },
-    {
       key: 'name',
       header: 'Name',
+      mobileLabel: false,
+      mobilePlacement: 'top',
       render: (row) => (
-        <Link href={`/customers/${row.id}`} className="font-medium underline-offset-4 hover:underline">
-          {row.name}
-        </Link>
+        <div className="flex items-center justify-between gap-3 md:justify-start">
+          <Avatar className="size-8">
+            {row.photo_url ? <AvatarImage src={row.photo_url} alt={row.name} /> : null}
+            <AvatarFallback>{row.name.slice(0, 1).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <Link href={`/customers/${row.id}`} className="text-right font-medium underline-offset-4 hover:underline md:text-left">
+            {row.name}
+          </Link>
+        </div>
       ),
     },
     {

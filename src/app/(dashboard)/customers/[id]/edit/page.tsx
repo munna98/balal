@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { BackButton } from '@/components/shared/BackButton'
 import { RISK_LEVELS } from '@/lib/constants'
 import { useTenantFromDashboard } from '@/components/layout/active-shop-context'
 import type { RiskLevelKey } from '@/types'
@@ -72,7 +72,7 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
         } else {
           setError('Failed to load customer details.')
         }
-      } catch (e) {
+      } catch {
         setError('Error loading customer.')
       } finally {
         setLoadingInitial(false)
@@ -150,8 +150,8 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
 
       router.push(`/customers/${customerId}`)
       router.refresh()
-    } catch (e: any) {
-      setError(e.message || 'Error saving customer.')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Error saving customer.')
     } finally {
       setSubmitting(false)
     }
@@ -161,7 +161,10 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
 
   return (
     <main className="space-y-4">
-      <h2 className="text-xl font-semibold">Edit Customer</h2>
+      <div className="flex items-center gap-2">
+        <BackButton href={`/customers/${customerId}`} compact label="Back to customer" />
+        <h2 className="text-xl font-semibold">Edit Customer</h2>
+      </div>
 
       <Card>
         <CardHeader>

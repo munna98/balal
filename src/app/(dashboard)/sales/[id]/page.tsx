@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { AddAdvanceDialog } from '@/components/advances/AddAdvanceDialog'
 import { AdvanceLedger } from '@/components/advances/AdvanceLedger'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { BackButton } from '@/components/shared/BackButton'
 
 function toNumber(value: unknown) {
   if (typeof value === 'number') return value
@@ -60,6 +61,10 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
 
   return (
     <main className="space-y-6">
+      <div className="flex items-center gap-2">
+        <BackButton href="/sales" compact label="Back to sales" />
+        <h1 className="text-xl font-semibold">Sale Details</h1>
+      </div>
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-4">
           <Avatar className="size-14">

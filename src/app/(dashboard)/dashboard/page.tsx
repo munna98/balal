@@ -149,36 +149,67 @@ export default async function DashboardPage() {
           <CardTitle className="text-sm text-muted-foreground">Last 5 sales</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Device</TableHead>
-                <TableHead>EMI</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lastSales.length ? (
-                lastSales.map((sale) => (
-                  <TableRow key={sale.id}>
-                    <TableCell>
-                      <div className="font-medium">{sale.customer.name}</div>
-                    </TableCell>
-                    <TableCell>{sale.device_name}</TableCell>
-                    <TableCell>{toNumber(sale.emi_amount).toFixed(2)}</TableCell>
-                    <TableCell>{format(new Date(sale.loan_issue_date), 'dd MMM yyyy')}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
+          <div className="space-y-3 md:hidden">
+            {lastSales.length ? (
+              lastSales.map((sale) => (
+                <div key={sale.id} className="rounded-lg border bg-background p-3 shadow-sm">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Customer</div>
+                      <div className="text-right font-medium">{sale.customer.name}</div>
+                    </div>
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Device</div>
+                      <div className="text-right break-words">{sale.device_name}</div>
+                    </div>
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">EMI</div>
+                      <div className="text-right">{toNumber(sale.emi_amount).toFixed(2)}</div>
+                    </div>
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Date</div>
+                      <div className="text-right">{format(new Date(sale.loan_issue_date), 'dd MMM yyyy')}</div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">No sales yet.</div>
+            )}
+          </div>
+
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No sales yet.
-                  </TableCell>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Device</TableHead>
+                  <TableHead>EMI</TableHead>
+                  <TableHead>Date</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {lastSales.length ? (
+                  lastSales.map((sale) => (
+                    <TableRow key={sale.id}>
+                      <TableCell>
+                        <div className="font-medium">{sale.customer.name}</div>
+                      </TableCell>
+                      <TableCell>{sale.device_name}</TableCell>
+                      <TableCell>{toNumber(sale.emi_amount).toFixed(2)}</TableCell>
+                      <TableCell>{format(new Date(sale.loan_issue_date), 'dd MMM yyyy')}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      No sales yet.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
@@ -187,34 +218,65 @@ export default async function DashboardPage() {
           <CardTitle className="text-sm text-muted-foreground">Top 5 customers by outstanding balance</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Mobile</TableHead>
-                <TableHead>Outstanding</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topCustomers.length ? (
-                topCustomers.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{c.mobile1}</TableCell>
-                    <TableCell className={c.balance > 0 ? 'text-red-600' : 'text-green-600'}>
-                      {c.balance.toFixed(2)}
+          <div className="space-y-3 md:hidden">
+            {topCustomers.length ? (
+              topCustomers.map((customer) => (
+                <div key={customer.id} className="rounded-lg border bg-background p-3 shadow-sm">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Customer</div>
+                      <div className="text-right font-medium">{customer.name}</div>
+                    </div>
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Mobile</div>
+                      <div className="text-right text-muted-foreground">{customer.mobile1}</div>
+                    </div>
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Outstanding</div>
+                      <div className={`text-right ${customer.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {customer.balance.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                No outstanding advances yet.
+              </div>
+            )}
+          </div>
+
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Mobile</TableHead>
+                  <TableHead>Outstanding</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topCustomers.length ? (
+                  topCustomers.map((customer) => (
+                    <TableRow key={customer.id}>
+                      <TableCell className="font-medium">{customer.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{customer.mobile1}</TableCell>
+                      <TableCell className={customer.balance > 0 ? 'text-red-600' : 'text-green-600'}>
+                        {customer.balance.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                      No outstanding advances yet.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground">
-                    No outstanding advances yet.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </main>

@@ -65,7 +65,7 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
       }
       toast.success('Sale deleted successfully')
       router.refresh()
-    } catch (e) {
+    } catch {
       toast.error('An error occurred during deletion')
     } finally {
       setIsDeleting(false)
@@ -102,7 +102,7 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="size-8 p-0">
+          <Button variant="ghost" className="size-8 rounded-full p-0">
             <span className="sr-only">Open menu</span>
             <MoreHorizontal className="size-4" />
           </Button>

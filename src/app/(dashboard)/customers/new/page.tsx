@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { BackButton } from '@/components/shared/BackButton'
 import { RISK_LEVELS } from '@/lib/constants'
 import { useTenantFromDashboard } from '@/components/layout/active-shop-context'
 
@@ -156,7 +157,10 @@ export default function NewCustomerPage() {
 
   return (
     <main className="space-y-4">
-      <h2 className="text-xl font-semibold">New Customer</h2>
+      <div className="flex items-center gap-2">
+        <BackButton href="/customers" compact />
+        <h2 className="text-xl font-semibold">New Customer</h2>
+      </div>
 
       <Card>
         <CardHeader>

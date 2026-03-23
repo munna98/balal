@@ -25,11 +25,10 @@ export function TopBar() {
       <div className="space-y-0.5">
         <h1 className="text-lg font-semibold leading-none">{pageTitle}</h1>
         <p className="text-xs text-muted-foreground">
-          Active shop: {activeShop ? activeShop.name : '—'}
+          {activeShop ? activeShop.name : '-'}
         </p>
       </div>
       <ThemeToggle />
     </div>
   )
 }
-

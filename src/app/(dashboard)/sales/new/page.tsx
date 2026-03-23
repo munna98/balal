@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,11 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { ImeiScanner } from '@/components/sales/ImeiScanner'
 import { SecondPartySelector } from '@/components/sales/SecondPartySelector'
 import { useActiveShop, useTenantFromDashboard } from '@/components/layout/active-shop-context'
-import type { Customer } from '@/types'
-
-function normalizeQuery(value: string) {
-  return value.trim().toLowerCase()
-}
+import { BackButton } from '@/components/shared/BackButton'
+import { CustomerLookupField, type CustomerLookupItem } from '@/components/customers/CustomerLookupField'
 
 export default function NewSalePage() {
   const router = useRouter()
@@ -23,15 +20,8 @@ export default function NewSalePage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerLookupItem | null>(null)
 
-  const [allCustomers, setAllCustomers] = useState<Customer[]>([])
-  const [customersLoading, setCustomersLoading] = useState(true)
-
-  // Main customer selector
-  const [customerQuery, setCustomerQuery] = useState('')
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
-
-  // Finance
   const [loanIssueDate, setLoanIssueDate] = useState(() => {
     const d = new Date()
     const yyyy = d.getFullYear()
@@ -44,43 +34,24 @@ export default function NewSalePage() {
   const [tenureMonths, setTenureMonths] = useState<string>('12')
   const [emiAmount, setEmiAmount] = useState<string>('')
 
-  // Product
   const [deviceName, setDeviceName] = useState('')
   const [imei, setImei] = useState('')
   const [referenceNumber, setReferenceNumber] = useState('')
 
-  // Care Of
   const [careOfOpen, setCareOfOpen] = useState(false)
   const [coName, setCoName] = useState('')
   const [coMobile, setCoMobile] = useState('')
 
-  // Second party
   const [secondPartyEnabled, setSecondPartyEnabled] = useState(false)
-  const [secondPartyCustomerId, setSecondPartyCustomerId] = useState<string | null>(null)
+  const [secondPartyCustomer, setSecondPartyCustomer] = useState<CustomerLookupItem | null>(null)
 
-  // Notes
   const [notes, setNotes] = useState('')
 
   useEffect(() => {
-    async function loadCustomers() {
-      try {
-        setCustomersLoading(true)
-        const res = await fetch('/api/customers')
-        const json = await res.json()
-        if (!res.ok || !json.data) return
-        setAllCustomers(json.data)
-      } finally {
-        setCustomersLoading(false)
-      }
+    if (selectedCustomer && secondPartyCustomer?.id === selectedCustomer.id) {
+      setSecondPartyCustomer(null)
     }
-    void loadCustomers()
-  }, [])
-
-  const matchingCustomers = useMemo(() => {
-    const q = normalizeQuery(customerQuery)
-    if (!q) return allCustomers
-    return allCustomers.filter((c) => `${c.name} ${c.mobile1}`.toLowerCase().includes(q))
-  }, [allCustomers, customerQuery])
+  }, [secondPartyCustomer, selectedCustomer])
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -91,7 +62,7 @@ export default function NewSalePage() {
       return
     }
 
-    if (!selectedCustomerId) {
+    if (!selectedCustomer) {
       setError('Please select a customer.')
       return
     }
@@ -121,7 +92,7 @@ export default function NewSalePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           shop_id: activeShop.id,
-          customer_id: selectedCustomerId,
+          customer_id: selectedCustomer.id,
           loan_issue_date: loanIssueDate,
           down_payment: downPaymentNum,
           loan_amount: loanAmountNum,
@@ -133,7 +104,7 @@ export default function NewSalePage() {
           co_name: careOfOpen && coName.trim() ? coName.trim() : null,
           co_mobile: careOfOpen && coMobile.trim() ? coMobile.trim() : null,
           is_second_party: secondPartyEnabled,
-          second_party_customer_id: secondPartyEnabled ? secondPartyCustomerId : null,
+          second_party_customer_id: secondPartyEnabled ? secondPartyCustomer?.id ?? null : null,
           notes: notes.trim() ? notes.trim() : null,
         }),
       })
@@ -152,7 +123,10 @@ export default function NewSalePage() {
 
   return (
     <main className="space-y-4">
-      <h2 className="text-xl font-semibold">New Sale</h2>
+      <div className="flex items-center gap-2">
+        <BackButton href="/sales" compact />
+        <h2 className="text-xl font-semibold">New Sale</h2>
+      </div>
 
       <Card>
         <CardHeader>
@@ -160,42 +134,15 @@ export default function NewSalePage() {
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Customer selector */}
             <section className="space-y-2">
-              <Label>Customer</Label>
-              <div className="space-y-2">
-                <Input
-                  placeholder="Search customer by name or mobile"
-                  value={customerQuery}
-                  onChange={(e) => setCustomerQuery(e.target.value)}
-                />
-                <div className="max-h-52 overflow-y-auto rounded-md border p-2">
-                  {customersLoading ? (
-                    <p className="text-sm text-muted-foreground">Loading customers…</p>
-                  ) : matchingCustomers.length ? (
-                    <div className="space-y-1">
-                      {matchingCustomers.slice(0, 100).map((customer) => (
-                        <button
-                          key={customer.id}
-                          type="button"
-                          className={`w-full rounded-md px-2 py-1 text-left text-sm hover:bg-muted ${
-                            selectedCustomerId === customer.id ? 'bg-muted' : ''
-                          }`}
-                          onClick={() => setSelectedCustomerId(customer.id)}
-                        >
-                          {customer.name} - {customer.mobile1}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No matching customers.</p>
-                  )}
-                </div>
-              </div>
+              <CustomerLookupField
+                label="Customer"
+                selectedCustomer={selectedCustomer}
+                onSelect={setSelectedCustomer}
+              />
             </section>
 
             <div className="grid gap-4 lg:grid-cols-2">
-              {/* Finance */}
               <section className="space-y-4">
                 <Card className="p-4" size="sm">
                   <CardHeader className="pb-2">
@@ -259,7 +206,6 @@ export default function NewSalePage() {
                 </Card>
               </section>
 
-              {/* Product */}
               <section className="space-y-4">
                 <Card className="p-4" size="sm">
                   <CardHeader className="pb-2">
@@ -287,7 +233,6 @@ export default function NewSalePage() {
               </section>
             </div>
 
-            {/* Care Of */}
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <Label>Care Of</Label>
@@ -315,26 +260,25 @@ export default function NewSalePage() {
               ) : null}
             </section>
 
-            {/* Second party */}
             <section>
               <SecondPartySelector
-                customers={allCustomers}
-                selectedCustomerId={secondPartyCustomerId}
+                selectedCustomer={secondPartyCustomer}
+                excludedCustomerIds={selectedCustomer ? [selectedCustomer.id] : []}
                 enabled={secondPartyEnabled}
                 onEnabledChange={setSecondPartyEnabled}
-                onSelect={setSecondPartyCustomerId}
+                onSelect={setSecondPartyCustomer}
               />
             </section>
 
             <section className="space-y-2">
               <Label htmlFor="notes">Notes</Label>
-              <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes…" />
+              <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes..." />
             </section>
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-            <Button type="submit" className="w-full" disabled={loading || customersLoading}>
-              {loading ? 'Saving…' : 'Create Sale'}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Saving...' : 'Create Sale'}
             </Button>
           </form>
         </CardContent>

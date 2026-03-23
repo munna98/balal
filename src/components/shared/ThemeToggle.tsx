@@ -1,40 +1,35 @@
 'use client'
 
-import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
+import { useTheme } from '@/components/shared/ThemeProvider'
 
 export function ThemeToggle({ className = '' }: { className?: string }) {
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  // Avoid hydration mismatch — only render icon after mount
-  useEffect(() => setMounted(true), [])
+  const { resolvedTheme, setTheme } = useTheme()
+  const mounted = useSyncExternalStore(
+    (callback) => {
+      const id = window.requestAnimationFrame(callback)
+      return () => window.cancelAnimationFrame(id)
+    },
+    () => true,
+    () => false
+  )
 
   if (!mounted) {
-    return (
-      <div className={`w-9 h-9 rounded-lg ${className}`} aria-hidden="true" />
-    )
+    return <div className={`h-9 w-9 rounded-lg ${className}`} aria-hidden="true" />
   }
 
-  const isDark = theme === 'dark'
+  const isDark = resolvedTheme === 'dark'
 
   return (
     <button
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className={`group relative w-9 h-9 rounded-lg flex items-center justify-center transition-all
-        border border-gray-200 dark:border-white/10
-        bg-white/80 dark:bg-white/5
-        hover:bg-gray-100 dark:hover:bg-white/10
-        text-gray-600 dark:text-gray-300
-        hover:text-gray-900 dark:hover:text-white
-        ${className}`}
+      className={`group relative flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white/80 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white ${className}`}
     >
-      {/* Sun */}
       <svg
-        className={`absolute w-4 h-4 transition-all duration-300 ${
-          isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-75'
+        className={`absolute h-4 w-4 transition-all duration-300 ${
+          isDark ? 'scale-100 rotate-0 opacity-100' : 'scale-75 rotate-90 opacity-0'
         }`}
         viewBox="0 0 24 24"
         fill="none"
@@ -53,10 +48,9 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
       </svg>
-      {/* Moon */}
       <svg
-        className={`absolute w-4 h-4 transition-all duration-300 ${
-          isDark ? 'opacity-0 -rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
+        className={`absolute h-4 w-4 transition-all duration-300 ${
+          isDark ? 'scale-75 -rotate-90 opacity-0' : 'scale-100 rotate-0 opacity-100'
         }`}
         viewBox="0 0 24 24"
         fill="none"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, use } from 'react'
+import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,11 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { ImeiScanner } from '@/components/sales/ImeiScanner'
 import { SecondPartySelector } from '@/components/sales/SecondPartySelector'
 import { useActiveShop, useTenantFromDashboard } from '@/components/layout/active-shop-context'
-import type { Customer } from '@/types'
-
-function normalizeQuery(value: string) {
-  return value.trim().toLowerCase()
-}
+import { BackButton } from '@/components/shared/BackButton'
+import type { CustomerLookupItem } from '@/components/customers/CustomerLookupField'
 
 export default function EditSalePage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params)
@@ -27,51 +24,27 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [allCustomers, setAllCustomers] = useState<Customer[]>([])
-  const [customersLoading, setCustomersLoading] = useState(true)
-
-  // Main customer selector
   const [customerQuery, setCustomerQuery] = useState('')
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
 
-  // Finance
   const [loanIssueDate, setLoanIssueDate] = useState('')
   const [downPayment, setDownPayment] = useState<string>('0')
   const [loanAmount, setLoanAmount] = useState<string>('')
   const [tenureMonths, setTenureMonths] = useState<string>('12')
   const [emiAmount, setEmiAmount] = useState<string>('')
 
-  // Product
   const [deviceName, setDeviceName] = useState('')
   const [imei, setImei] = useState('')
   const [referenceNumber, setReferenceNumber] = useState('')
 
-  // Care Of
   const [careOfOpen, setCareOfOpen] = useState(false)
   const [coName, setCoName] = useState('')
   const [coMobile, setCoMobile] = useState('')
 
-  // Second party
   const [secondPartyEnabled, setSecondPartyEnabled] = useState(false)
-  const [secondPartyCustomerId, setSecondPartyCustomerId] = useState<string | null>(null)
+  const [secondPartyCustomer, setSecondPartyCustomer] = useState<CustomerLookupItem | null>(null)
 
-  // Notes
   const [notes, setNotes] = useState('')
-
-  useEffect(() => {
-    async function loadCustomers() {
-      try {
-        setCustomersLoading(true)
-        const res = await fetch('/api/customers')
-        const json = await res.json()
-        if (!res.ok || !json.data) return
-        setAllCustomers(json.data)
-      } finally {
-        setCustomersLoading(false)
-      }
-    }
-    void loadCustomers()
-  }, [])
 
   useEffect(() => {
     async function loadSale() {
@@ -79,54 +52,59 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
         const res = await fetch(`/api/sales/${saleId}`)
         const json = await res.json()
         if (res.ok && json.data) {
-          const s = json.data
-          setSelectedCustomerId(s.customer_id)
-          setCustomerQuery(s.customer?.name || '')
-          
-          if (s.loan_issue_date) {
-            const d = new Date(s.loan_issue_date)
+          const sale = json.data
+          setSelectedCustomerId(sale.customer_id)
+          setCustomerQuery(sale.customer?.name || '')
+
+          if (sale.loan_issue_date) {
+            const d = new Date(sale.loan_issue_date)
             const yyyy = d.getFullYear()
             const mm = String(d.getMonth() + 1).padStart(2, '0')
             const dd = String(d.getDate()).padStart(2, '0')
             setLoanIssueDate(`${yyyy}-${mm}-${dd}`)
           }
-          
-          setDownPayment(s.down_payment?.toString() || '0')
-          setLoanAmount(s.loan_amount?.toString() || '0')
-          setTenureMonths(s.tenure_months?.toString() || '12')
-          setEmiAmount(s.emi_amount?.toString() || '0')
-          
-          setDeviceName(s.device_name || '')
-          setImei(s.imei || '')
-          setReferenceNumber(s.reference_number || '')
-          
-          if (s.co_name || s.co_mobile) {
+
+          setDownPayment(sale.down_payment?.toString() || '0')
+          setLoanAmount(sale.loan_amount?.toString() || '0')
+          setTenureMonths(sale.tenure_months?.toString() || '12')
+          setEmiAmount(sale.emi_amount?.toString() || '0')
+
+          setDeviceName(sale.device_name || '')
+          setImei(sale.imei || '')
+          setReferenceNumber(sale.reference_number || '')
+
+          if (sale.co_name || sale.co_mobile) {
             setCareOfOpen(true)
-            setCoName(s.co_name || '')
-            setCoMobile(s.co_mobile || '')
+            setCoName(sale.co_name || '')
+            setCoMobile(sale.co_mobile || '')
           }
-          
-          setSecondPartyEnabled(s.is_second_party || false)
-          setSecondPartyCustomerId(s.second_party_customer_id || null)
-          
-          setNotes(s.notes || '')
+
+          setSecondPartyEnabled(Boolean(sale.is_second_party))
+          setSecondPartyCustomer(
+            sale.second_party_customer
+              ? {
+                  id: sale.second_party_customer.id,
+                  name: sale.second_party_customer.name,
+                  mobile1: sale.second_party_customer.mobile1,
+                  photo_url: sale.second_party_customer.photo_url,
+                  risk_level: sale.second_party_customer.risk_level,
+                }
+              : null
+          )
+
+          setNotes(sale.notes || '')
         } else {
           setError('Failed to load sale details.')
         }
-      } catch (e) {
+      } catch {
         setError('Error loading sale.')
       } finally {
         setLoadingInitial(false)
       }
     }
+
     void loadSale()
   }, [saleId])
-
-  const matchingCustomers = useMemo(() => {
-    const q = normalizeQuery(customerQuery)
-    if (!q) return allCustomers
-    return allCustomers.filter((c) => `${c.name} ${c.mobile1}`.toLowerCase().includes(q))
-  }, [allCustomers, customerQuery])
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -177,7 +155,7 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
           co_name: careOfOpen && coName.trim() ? coName.trim() : null,
           co_mobile: careOfOpen && coMobile.trim() ? coMobile.trim() : null,
           is_second_party: secondPartyEnabled,
-          second_party_customer_id: secondPartyEnabled ? secondPartyCustomerId : null,
+          second_party_customer_id: secondPartyEnabled ? secondPartyCustomer?.id ?? null : null,
           notes: notes.trim() ? notes.trim() : null,
         }),
       })
@@ -190,8 +168,8 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
 
       router.push(`/sales/${saleId}`)
       router.refresh()
-    } catch (e: any) {
-      setError(e.message || 'Error updating sale.')
+    } catch (submitError: unknown) {
+      setError(submitError instanceof Error ? submitError.message : 'Error updating sale.')
     } finally {
       setLoading(false)
     }
@@ -201,7 +179,10 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
 
   return (
     <main className="space-y-4">
-      <h2 className="text-xl font-semibold">Edit Sale</h2>
+      <div className="flex items-center gap-2">
+        <BackButton href={`/sales/${saleId}`} compact label="Back to sale" />
+        <h2 className="text-xl font-semibold">Edit Sale</h2>
+      </div>
 
       <Card>
         <CardHeader>
@@ -209,19 +190,17 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Customer selector (readonly for edit usually, but let's keep it search-based or just display) */}
             <section className="space-y-2">
               <Label>Customer (changing customer is restricted via UI, currently disabled)</Label>
               <Input
-                placeholder="Search customer by name or mobile"
+                placeholder="Customer"
                 value={customerQuery}
                 readOnly
-                className="bg-muted cursor-not-allowed"
+                className="cursor-not-allowed bg-muted"
               />
             </section>
 
             <div className="grid gap-4 lg:grid-cols-2">
-              {/* Finance */}
               <section className="space-y-4">
                 <Card className="p-4" size="sm">
                   <CardHeader className="pb-2">
@@ -285,7 +264,6 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
                 </Card>
               </section>
 
-              {/* Product */}
               <section className="space-y-4">
                 <Card className="p-4" size="sm">
                   <CardHeader className="pb-2">
@@ -313,7 +291,6 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
               </section>
             </div>
 
-            {/* Care Of */}
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <Label>Care Of</Label>
@@ -341,26 +318,25 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
               ) : null}
             </section>
 
-            {/* Second party */}
             <section>
               <SecondPartySelector
-                customers={allCustomers}
-                selectedCustomerId={secondPartyCustomerId}
+                selectedCustomer={secondPartyCustomer}
+                excludedCustomerIds={selectedCustomerId ? [selectedCustomerId] : []}
                 enabled={secondPartyEnabled}
                 onEnabledChange={setSecondPartyEnabled}
-                onSelect={setSecondPartyCustomerId}
+                onSelect={setSecondPartyCustomer}
               />
             </section>
 
             <section className="space-y-2">
               <Label htmlFor="notes">Notes</Label>
-              <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes…" />
+              <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes..." />
             </section>
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-            <Button type="submit" className="w-full" disabled={loading || customersLoading || loadingInitial}>
-              {loading ? 'Saving…' : 'Save Changes'}
+            <Button type="submit" className="w-full" disabled={loading || loadingInitial}>
+              {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </form>
         </CardContent>

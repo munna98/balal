@@ -12,7 +12,7 @@ export function RiskBadge({ riskLevel }: { riskLevel: RiskLevelKey }) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge className={`${risk.color} text-white`}>{`${risk.level} · ${risk.label}`}</Badge>
+          <Badge className={`${risk.color} text-white`}>{risk.label}</Badge>
         </TooltipTrigger>
         <TooltipContent>{risk.description}</TooltipContent>
       </Tooltip>

@@ -8,7 +8,7 @@ import { SUBSCRIPTION_STATUS_LABELS } from '@/lib/constants'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { DataTable } from '@/components/shared/DataTable'
+import { DataTable, type DataTableColumn } from '@/components/shared/DataTable'
 
 type TenantRow = {
   id: string
@@ -43,6 +43,89 @@ export function TenantTable({ tenants }: { tenants: TenantRow[] }) {
     router.refresh()
   }
 
+  const columns: DataTableColumn<TenantRow>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      render: (tenant) => (
+        <Link href={`/admin/tenants/${tenant.id}`} className="font-medium underline-offset-4 hover:underline">
+          {tenant.name}
+        </Link>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      render: (tenant) => tenant.email,
+    },
+    {
+      key: 'phone',
+      header: 'Phone',
+      render: (tenant) =>
+        tenant.phone ? (
+          <a
+            href={`https://wa.me/91${tenant.phone}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            {tenant.phone}
+          </a>
+        ) : (
+          '-'
+        ),
+    },
+    {
+      key: 'shop_count',
+      header: 'Shop count',
+      render: (tenant) => tenant.shop_count,
+    },
+    {
+      key: 'subscription_status',
+      header: 'Status',
+      render: (tenant) => (
+        <Badge className={SUBSCRIPTION_STATUS_LABELS[tenant.subscription_status].color}>
+          {SUBSCRIPTION_STATUS_LABELS[tenant.subscription_status].label}
+        </Badge>
+      ),
+    },
+    {
+      key: 'subscription_date',
+      header: 'Trial ends / Subscribed',
+      render: (tenant) =>
+        tenant.subscription_status === 'ACTIVE'
+          ? tenant.subscribed_at
+            ? format(tenant.subscribed_at, 'dd MMM yyyy')
+            : '-'
+          : tenant.trial_ends_at
+            ? format(tenant.trial_ends_at, 'dd MMM yyyy')
+            : '-',
+    },
+    {
+      key: 'created_at',
+      header: 'Signed up',
+      render: (tenant) => format(tenant.created_at, 'dd MMM yyyy'),
+    },
+    {
+      key: 'actions',
+      header: '',
+      render: (tenant) => (
+        <div className="flex flex-wrap justify-end gap-2 md:flex-nowrap">
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/admin/tenants/${tenant.id}`}>View</Link>
+          </Button>
+          <Button
+            size="sm"
+            variant={tenant.subscription_status === 'SUSPENDED' ? 'default' : 'destructive'}
+            onClick={() => toggleStatus(tenant)}
+          >
+            {tenant.subscription_status === 'SUSPENDED' ? 'Activate' : 'Suspend'}
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div className="space-y-3">
       <Tabs value={filter} onValueChange={(value) => setFilter(value as FilterValue)}>
@@ -54,69 +137,7 @@ export function TenantTable({ tenants }: { tenants: TenantRow[] }) {
         </TabsList>
       </Tabs>
 
-      <DataTable
-        headers={[
-          'Name',
-          'Email',
-          'Phone',
-          'Shop count',
-          'Status',
-          'Trial ends / Subscribed',
-          'Signed up',
-          'Actions',
-        ]}
-      >
-        {filteredTenants.map((tenant) => (
-          <tr key={tenant.id} className="border-t">
-            <td className="px-3 py-2 font-medium">{tenant.name}</td>
-            <td className="px-3 py-2">{tenant.email}</td>
-            <td className="px-3 py-2">
-              {tenant.phone ? (
-                <a
-                  href={`https://wa.me/91${tenant.phone}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary underline-offset-4 hover:underline"
-                >
-                  {tenant.phone}
-                </a>
-              ) : (
-                '-'
-              )}
-            </td>
-            <td className="px-3 py-2">{tenant.shop_count}</td>
-            <td className="px-3 py-2">
-              <Badge className={SUBSCRIPTION_STATUS_LABELS[tenant.subscription_status].color}>
-                {SUBSCRIPTION_STATUS_LABELS[tenant.subscription_status].label}
-              </Badge>
-            </td>
-            <td className="px-3 py-2 text-muted-foreground">
-              {tenant.subscription_status === 'ACTIVE'
-                ? tenant.subscribed_at
-                  ? format(tenant.subscribed_at, 'dd MMM yyyy')
-                  : '-'
-                : tenant.trial_ends_at
-                  ? format(tenant.trial_ends_at, 'dd MMM yyyy')
-                  : '-'}
-            </td>
-            <td className="px-3 py-2 text-muted-foreground">{format(tenant.created_at, 'dd MMM yyyy')}</td>
-            <td className="px-3 py-2">
-              <div className="flex gap-2">
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/admin/tenants/${tenant.id}`}>View</Link>
-                </Button>
-                <Button
-                  size="sm"
-                  variant={tenant.subscription_status === 'SUSPENDED' ? 'default' : 'destructive'}
-                  onClick={() => toggleStatus(tenant)}
-                >
-                  {tenant.subscription_status === 'SUSPENDED' ? 'Activate' : 'Suspend'}
-                </Button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </DataTable>
+      <DataTable columns={columns} data={filteredTenants} emptyMessage="No tenants found." />
     </div>
   )
 }
