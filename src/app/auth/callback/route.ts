@@ -25,6 +25,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', origin))
   }
 
+  if (user.email === process.env.ADMIN_EMAIL) {
+    return NextResponse.redirect(new URL('/admin', origin))
+  }
+
   const tenant = await prisma.tenant.findUnique({
     where: { supabase_user_id: user.id },
     select: { id: true },

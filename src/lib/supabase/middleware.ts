@@ -42,6 +42,13 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Redirect admin to /admin if they are on dashboard, onboarding or home
+  if (user?.email === process.env.ADMIN_EMAIL && !isAdminRoute && !isAuthRoute && !isBillingRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/admin'
+    return NextResponse.redirect(url)
+  }
+
   // Check subscription status for signed-in users.
   if (user && !isAuthRoute && !isAdminRoute && !isOnboarding && !isBillingRoute) {
     const { data: tenant } = await supabase
