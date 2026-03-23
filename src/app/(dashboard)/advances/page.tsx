@@ -24,7 +24,8 @@ type AdvanceWithSale = {
   }
 }
 
-export default async function AdvancesPage({ searchParams }: { searchParams?: { tab?: string } }) {
+export default async function AdvancesPage(props: { searchParams?: Promise<{ tab?: string }> }) {
+  const searchParams = await props.searchParams
   const { tenant, activeShop } = await getTenantShopsAndActiveShop()
 
   if (!tenant) return <main className="space-y-4">Unauthorized</main>

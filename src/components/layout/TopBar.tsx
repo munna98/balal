@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useMemo } from 'react'
 import { useActiveShop } from '@/components/layout/active-shop-context'
+import { ThemeToggle } from '@/components/shared/ThemeToggle'
 
 function titleFromPath(pathname: string) {
   const last = pathname.split('/').filter(Boolean).pop()
@@ -27,6 +28,8 @@ export function TopBar() {
           Active shop: {activeShop ? activeShop.name : '—'}
         </p>
       </div>
+      <ThemeToggle />
     </div>
   )
 }
+

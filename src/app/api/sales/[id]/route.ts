@@ -114,3 +114,22 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ data: null, error: 'Failed to update sale' }, { status: 500 })
   }
 }
+
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const tenantId = await getTenantId()
+    if (!tenantId) return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 })
+    const { id } = await params
+
+    const existing = await prisma.sale.findFirst({
+      where: { id, shop: { tenant_id: tenantId } },
+    })
+
+    if (!existing) return NextResponse.json({ data: null, error: 'Sale not found' }, { status: 404 })
+
+    await prisma.sale.delete({ where: { id } })
+    return NextResponse.json({ data: { success: true }, error: null })
+  } catch {
+    return NextResponse.json({ data: null, error: 'Failed to delete sale' }, { status: 500 })
+  }
+}

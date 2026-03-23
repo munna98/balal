@@ -100,3 +100,35 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ data: null, error: 'Failed to update customer' }, { status: 500 })
   }
 }
+
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const tenantId = await getTenantId()
+    if (!tenantId) return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 })
+    const { id } = await params
+
+    const existing = await prisma.customer.findFirst({
+      where: { id, tenant_id: tenantId },
+      include: {
+        _count: {
+          select: { sales: true, second_party_sales: true },
+        },
+      },
+    })
+
+    if (!existing) return NextResponse.json({ data: null, error: 'Customer not found' }, { status: 404 })
+
+    const totalSales = existing._count.sales + existing._count.second_party_sales
+    if (totalSales > 0) {
+      return NextResponse.json(
+        { data: null, error: 'Cannot delete a customer who has existing sales.' },
+        { status: 400 }
+      )
+    }
+
+    await prisma.customer.delete({ where: { id } })
+    return NextResponse.json({ data: { success: true }, error: null })
+  } catch {
+    return NextResponse.json({ data: null, error: 'Failed to delete customer' }, { status: 500 })
+  }
+}

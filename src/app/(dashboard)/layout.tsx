@@ -7,6 +7,7 @@ import { TopBar } from '@/components/layout/TopBar'
 import { DashboardProvider } from '@/components/layout/active-shop-context'
 import type { Tenant, Shop } from '@/types'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 function calculateTrialDaysLeft(trialEndsAt: Date | null) {
   if (!trialEndsAt) return 0
@@ -20,12 +21,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     data: { user },
   } = await supabase.auth.getUser()
 
-  let tenant: Tenant | null = null
+  if (!user) {
+    redirect('/auth/login')
+  }
 
-  if (user) {
-    tenant = await prisma.tenant.findUnique({
-      where: { supabase_user_id: user.id },
-    })
+  const tenant = await prisma.tenant.findUnique({
+    where: { supabase_user_id: user.id },
+  })
+
+  if (!tenant) {
+    redirect('/onboarding')
   }
 
   const shops: Shop[] = tenant
@@ -39,11 +44,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const ACTIVE_SHOP_COOKIE = 'balal_active_shop'
   const cookieActiveShopId = cookieStore.get(ACTIVE_SHOP_COOKIE)?.value
   const activeShop = cookieActiveShopId ? shops.find((s) => s.id === cookieActiveShopId) || null : shops[0] || null
-
-  // Ensure a stable active shop for cookie-driven server rendering.
-  if (activeShop && (!cookieActiveShopId || activeShop.id !== cookieActiveShopId)) {
-    cookieStore.set(ACTIVE_SHOP_COOKIE, activeShop.id, { path: '/', maxAge: 60 * 60 * 24 * 30, sameSite: 'lax' })
-  }
 
   const daysLeft = tenant ? calculateTrialDaysLeft(tenant.trial_ends_at) : 0
   const showTrialBanner = tenant?.subscription_status === 'TRIAL'

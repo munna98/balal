@@ -24,7 +24,8 @@ type SaleForList = {
   advances: { amount_paid: unknown; amount_repaid: unknown | null }[]
 }
 
-export default async function SalesPage({ searchParams }: { searchParams?: { has_outstanding_advance?: string } }) {
+export default async function SalesPage(props: { searchParams?: Promise<{ has_outstanding_advance?: string }> }) {
+  const searchParams = await props.searchParams
   const { tenant, activeShop } = await getTenantShopsAndActiveShop()
 
   if (!tenant) return <main className="space-y-4">Unauthorized</main>
@@ -81,7 +82,7 @@ export default async function SalesPage({ searchParams }: { searchParams?: { has
         </Button>
       </div>
 
-      <SalesDataTable rows={rows} />
+      <SalesDataTable rows={rows} shopId={activeShop.id} />
     </main>
   )
 }

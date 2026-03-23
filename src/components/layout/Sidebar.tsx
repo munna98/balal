@@ -4,13 +4,20 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { APP_NAME } from '@/lib/constants'
 import { ShopSwitcher } from '@/components/layout/ShopSwitcher'
+import { 
+  LayoutDashboard, 
+  Users, 
+  ShoppingCart, 
+  HandCoins, 
+  Store 
+} from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Customers', href: '/customers' },
-  { label: 'Sales', href: '/sales' },
-  { label: 'Advances', href: '/advances' },
-  { label: 'Shops', href: '/shops' },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Customers', href: '/customers', icon: Users },
+  { label: 'Sales', href: '/sales', icon: ShoppingCart },
+  { label: 'Advances', href: '/advances', icon: HandCoins },
+  { label: 'Shops', href: '/shops', icon: Store },
 ]
 
 type ShopItem = {
@@ -31,14 +38,16 @@ export function Sidebar({ shops = [] }: { shops?: ShopItem[] }) {
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+            const Icon = item.icon
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`block rounded-md px-3 py-2 text-sm ${
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${
                   isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
                 }`}
               >
+                <Icon className="h-4 w-4" />
                 {item.label}
               </Link>
             )
@@ -50,15 +59,17 @@ export function Sidebar({ shops = [] }: { shops?: ShopItem[] }) {
         <div className="flex items-center justify-between gap-1">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+            const Icon = item.icon
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex-1 rounded-md px-2 py-2 text-center text-xs ${
-                  isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                className={`flex flex-1 flex-col items-center gap-1 rounded-md px-2 py-2 text-center text-[10px] ${
+                  isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'
                 }`}
               >
-                {item.label}
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
               </Link>
             )
           })}

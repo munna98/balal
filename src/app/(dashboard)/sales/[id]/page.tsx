@@ -25,7 +25,8 @@ type AdvanceForSaleMapping = {
   note: string | null
 }
 
-export default async function SaleDetailPage({ params }: { params: { id: string } }) {
+export default async function SaleDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const { tenant } = await getTenantShopsAndActiveShop()
 
   if (!tenant) return <main className="space-y-4">Unauthorized</main>

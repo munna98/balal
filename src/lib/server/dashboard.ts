@@ -32,10 +32,6 @@ export async function getTenantShopsAndActiveShop(): Promise<{
   const cookieActiveShopId = cookieStore.get(ACTIVE_SHOP_COOKIE)?.value
   const activeShop = cookieActiveShopId ? shops.find((s) => s.id === cookieActiveShopId) || null : shops[0] || null
 
-  if (activeShop && (!cookieActiveShopId || activeShop.id !== cookieActiveShopId)) {
-    cookieStore.set(ACTIVE_SHOP_COOKIE, activeShop.id, { path: '/', maxAge: 60 * 60 * 24 * 30, sameSite: 'lax' })
-  }
-
   return { tenant, shops, activeShop }
 }
 

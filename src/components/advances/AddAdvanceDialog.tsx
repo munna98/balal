@@ -39,7 +39,7 @@ export function AddAdvanceDialog({ saleId, shopId }: { saleId: string; shopId: s
 
   return (
     <>
-      <Button type="button" onClick={() => setOpen(true)} variant="outline">
+      <Button type="button" onClick={() => setOpen(true)} variant="outline" size="sm" className="w-full">
         Add Advance
       </Button>
 

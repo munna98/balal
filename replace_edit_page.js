@@ -1,31 +1,19 @@
-'use client'
+const fs = require('fs');
+const file = 'd:/MunnaProjects/balal/src/app/(dashboard)/customers/[id]/edit/page.tsx';
+let content = fs.readFileSync(file, 'utf8');
 
-import { useEffect, useMemo, useState, use } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { RISK_LEVELS } from '@/lib/constants'
-import { useTenantFromDashboard } from '@/components/layout/active-shop-context'
-import type { RiskLevelKey } from '@/types'
+const regexMap = [
+  {
+    find: \`  const [loadingInitial, setLoadingInitial] = useState(true)
+  const [name, setName] = useState('')
+  const [mobile1, setMobile1] = useState('')
+  const [aadhaar, setAadhaar] = useState('')
+  const [riskLevel, setRiskLevel] = useState<RiskLevelKey>('NEUTRAL')
+  const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null)
 
-function isMobileDevice() {
-  if (typeof navigator === 'undefined') return false
-  return /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)
-}
-
-export default function EditCustomerPage(props: { params: Promise<{ id: string }> }) {
-  const params = use(props.params)
-  const customerId = params.id
-  const router = useRouter()
-  const tenant = useTenantFromDashboard()
-
-  const [loadingInitial, setLoadingInitial] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)\`,
+    replace: \`  const [loadingInitial, setLoadingInitial] = useState(true)
   const [name, setName] = useState('')
   const [mobile1, setMobile1] = useState('')
   const [aadhaar, setAadhaar] = useState('')
@@ -41,25 +29,25 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
   const [showAdditionalMobiles, setShowAdditionalMobiles] = useState(false)
 
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const mobile = useMemo(() => isMobileDevice(), [])
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch(`/api/customers/${customerId}`)
-        const json = await res.json()
-        if (res.ok && json.data?.customer) {
+  const [error, setError] = useState<string | null>(null)\`
+  },
+  {
+    find: \`        if (res.ok && json.data?.customer) {
           const c = json.data.customer
           setName(c.name || '')
           setMobile1(c.mobile1 || '')
           setAadhaar(c.aadhaar || '')
           setRiskLevel((c.risk_level as RiskLevelKey) || 'NEUTRAL')
           setExistingPhotoUrl(c.photo_url || null)
-
+        } else {\`,
+    replace: \`        if (res.ok && json.data?.customer) {
+          const c = json.data.customer
+          setName(c.name || '')
+          setMobile1(c.mobile1 || '')
+          setAadhaar(c.aadhaar || '')
+          setRiskLevel((c.risk_level as RiskLevelKey) || 'NEUTRAL')
+          setExistingPhotoUrl(c.photo_url || null)
+          
           setMobile2(c.mobile2 || '')
           setMobile2Label(c.mobile2_label || 'Father')
           setMobile3(c.mobile3 || '')
@@ -67,64 +55,23 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
           setMobile4(c.mobile4 || '')
           setMobile4Label(c.mobile4_label || 'Friend')
           if (c.mobile2 || c.mobile3 || c.mobile4) {
-            setShowAdditionalMobiles(true)
+             setShowAdditionalMobiles(true)
           }
-        } else {
-          setError('Failed to load customer details.')
-        }
-      } catch (e) {
-        setError('Error loading customer.')
-      } finally {
-        setLoadingInitial(false)
-      }
-    }
-    void load()
-  }, [customerId])
-
-  useEffect(() => {
-    if (!photoFile) {
-      setPhotoPreviewUrl(null)
-      return
-    }
-    const url = URL.createObjectURL(photoFile)
-    setPhotoPreviewUrl(url)
-    return () => URL.revokeObjectURL(url)
-  }, [photoFile])
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError(null)
-
-    if (!tenant?.id) {
-      setError('Tenant not available.')
-      return
-    }
-
-    const trimmedName = name.trim()
-    const trimmedMobile1 = mobile1.trim()
-    if (!trimmedName || !trimmedMobile1) {
-      setError('Name and mobile are required.')
-      return
-    }
-
-    setSubmitting(true)
-    try {
-      let finalPhotoUrl = existingPhotoUrl
-
-      if (photoFile) {
-        const supabase = createClient()
-        const path = `${tenant.id}/customers/${customerId}/photo.jpg`
-        const { error: uploadError } = await supabase.storage.from('shop-assets').upload(path, photoFile, {
-          upsert: true,
-          contentType: photoFile.type || 'image/jpeg',
-        })
-        if (uploadError) throw uploadError
-
-        const { data } = supabase.storage.from('shop-assets').getPublicUrl(path)
-        finalPhotoUrl = data.publicUrl
-      }
-
-      const updateRes = await fetch(`/api/customers/${customerId}`, {
+        } else {\`
+  },
+  {
+    find: \`      const updateRes = await fetch(\\\`/api/customers/\\\${customerId}\\\`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: trimmedName,
+          mobile1: trimmedMobile1,
+          aadhaar: aadhaar.trim() ? aadhaar.trim() : undefined,
+          risk_level: riskLevel,
+          photo_url: finalPhotoUrl,
+        }),
+      })\`,
+    replace: \`      const updateRes = await fetch(\\\`/api/customers/\\\${customerId}\\\`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -140,77 +87,10 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
           mobile4: mobile4.trim() ? mobile4.trim() : undefined,
           mobile4_label: mobile4Label.trim() ? mobile4Label.trim() : undefined,
         }),
-      })
-
-      const updateJson = await updateRes.json()
-      if (!updateRes.ok) {
-        setError(updateJson.error || 'Failed to update customer.')
-        return
-      }
-
-      router.push(`/customers/${customerId}`)
-      router.refresh()
-    } catch (e: any) {
-      setError(e.message || 'Error saving customer.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  if (loadingInitial) return <main className="p-4">Loading...</main>
-
-  return (
-    <main className="space-y-4">
-      <h2 className="text-xl font-semibold">Edit Customer</h2>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Customer details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="flex flex-wrap items-start gap-4">
-              <div className="space-y-2">
-                <Avatar className="size-20">
-                  {photoPreviewUrl ? (
-                    <AvatarImage src={photoPreviewUrl} alt="Preview" />
-                  ) : existingPhotoUrl ? (
-                    <AvatarImage src={existingPhotoUrl} alt="Current photo" />
-                  ) : null}
-                  <AvatarFallback>{name.slice(0, 1)}</AvatarFallback>
-                </Avatar>
-              </div>
-
-              <div className="flex-1 space-y-2">
-                <Label>Update Photo</Label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  capture={mobile ? 'environment' : undefined}
-                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="customer-name">Name</Label>
-                <Input id="customer-name" value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="customer-mobile1">Mobile</Label>
-                <Input
-                  id="customer-mobile1"
-                  value={mobile1}
-                  onChange={(e) => setMobile1(e.target.value)}
-                  inputMode="numeric"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
+      })\`
+  },
+  {
+    find: \`            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="customer-aadhaar">Aadhaar (optional)</Label>
                 <Input
@@ -232,8 +112,43 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
                       const r = RISK_LEVELS[key]
                       return (
                         <SelectItem key={key} value={key}>
-                          <span className={`inline-flex items-center gap-2`}>
-                            <span className={`size-2 rounded-full ${r.color.replace('bg-', 'bg-')}`} />
+                          <span className={\\\`inline-flex items-center gap-2\\\`}>
+                            <span className={\\\`size-2 rounded-full \\\${r.color.replace('bg-', 'bg-')}\\\`} />
+                            {r.label}
+                          </span>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}\`,
+    replace: \`            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="customer-aadhaar">Aadhaar (optional)</Label>
+                <Input
+                  id="customer-aadhaar"
+                  value={aadhaar}
+                  onChange={(e) => setAadhaar(e.target.value)}
+                  inputMode="numeric"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Risk level</Label>
+                <Select value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevelKey)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select risk level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(RISK_LEVELS) as RiskLevelKey[]).map((key) => {
+                      const r = RISK_LEVELS[key]
+                      return (
+                        <SelectItem key={key} value={key}>
+                          <span className={\\\`inline-flex items-center gap-2\\\`}>
+                            <span className={\\\`size-2 rounded-full \\\${r.color.replace('bg-', 'bg-')}\\\`} />
                             {r.label}
                           </span>
                         </SelectItem>
@@ -337,14 +252,37 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
               )}
             </div>
 
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}\`
+  }
+];
 
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </main>
-  )
+let replaced = 0;
+for (const {find, replace} of regexMap) {
+  if (content.includes(find)) {
+    content = content.replace(find, replace);
+    replaced++;
+  } else if (content.includes(find.replace(/\\n/g, '\\r\\n'))) {
+    content = content.replace(find.replace(/\\n/g, '\\r\\n'), replace.replace(/\\n/g, '\\r\\n'));
+    replaced++;
+  } else {
+    // try to match without newlines to find it loosely
+    const cleanFind = find.replace(/\\s+/g, '');
+    const cleanContent = content.replace(/\\s+/g, '');
+    if (cleanContent.includes(cleanFind)) {
+      console.log('Match found if spaces ignoring, meaning line endings differ.');
+      // build a regex to overcome newlines
+      const rx = new RegExp(find.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&').replace(/\\n/g, '\\\\r?\\\\n'), 'g');
+      if (rx.test(content)) {
+         content = content.replace(rx, replace.replace(/\\n/g, '\\r\\n')); // Output \r\n to match Windows file style
+         replaced++;
+      } else {
+         console.error('Regex still failed for:', find.substring(0, 50));
+      }
+    } else {
+      console.error('Could not find even without whitespace:', find.substring(0, 50));
+    }
+  }
 }
+
+fs.writeFileSync(file, content);
+console.log('Done, replaced', replaced, 'chunks');

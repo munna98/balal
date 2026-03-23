@@ -28,6 +28,14 @@ export default function NewCustomerPage() {
   const [mobile1, setMobile1] = useState('')
   const [aadhaar, setAadhaar] = useState('')
   const [riskLevel, setRiskLevel] = useState<RiskLevelKey>('NEUTRAL')
+  
+  const [mobile2, setMobile2] = useState('')
+  const [mobile2Label, setMobile2Label] = useState('Father')
+  const [mobile3, setMobile3] = useState('')
+  const [mobile3Label, setMobile3Label] = useState('Mother')
+  const [mobile4, setMobile4] = useState('')
+  const [mobile4Label, setMobile4Label] = useState('Friend')
+  const [showAdditionalMobiles, setShowAdditionalMobiles] = useState(false)
 
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -93,6 +101,12 @@ export default function NewCustomerPage() {
           mobile1: trimmedMobile1,
           aadhaar: aadhaar.trim() ? aadhaar.trim() : undefined,
           risk_level: riskLevel,
+          mobile2: mobile2.trim() ? mobile2.trim() : undefined,
+          mobile2_label: mobile2Label.trim() ? mobile2Label.trim() : undefined,
+          mobile3: mobile3.trim() ? mobile3.trim() : undefined,
+          mobile3_label: mobile3Label.trim() ? mobile3Label.trim() : undefined,
+          mobile4: mobile4.trim() ? mobile4.trim() : undefined,
+          mobile4_label: mobile4Label.trim() ? mobile4Label.trim() : undefined,
         }),
       })
 
@@ -229,6 +243,99 @@ export default function NewCustomerPage() {
                   </span>
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-1.5 border p-3 rounded-md bg-muted/20">
+              <div className="flex items-center justify-between pb-2 border-b">
+                <Label className="text-base font-medium">Additional Mobile Numbers</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAdditionalMobiles(!showAdditionalMobiles)}
+                >
+                  {showAdditionalMobiles ? 'Hide' : 'Add'} Numbers
+                </Button>
+              </div>
+              
+              {showAdditionalMobiles && (
+                <div className="grid gap-4 sm:grid-cols-2 pt-3">
+                  <div className="space-y-1.5">
+                    <Label>Mobile 2 (Optional)</Label>
+                    <div className="flex gap-2">
+                      <Select value={mobile2Label} onValueChange={setMobile2Label}>
+                        <SelectTrigger className="w-[110px] shrink-0">
+                          <SelectValue placeholder="Label" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Father">Father</SelectItem>
+                          <SelectItem value="Mother">Mother</SelectItem>
+                          <SelectItem value="Friend">Friend</SelectItem>
+                          <SelectItem value="Spouse">Spouse</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={mobile2}
+                        onChange={(e) => setMobile2(e.target.value)}
+                        inputMode="numeric"
+                        placeholder="10-digit mobile"
+                        className="flex-1 min-w-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Mobile 3 (Optional)</Label>
+                    <div className="flex gap-2">
+                      <Select value={mobile3Label} onValueChange={setMobile3Label}>
+                        <SelectTrigger className="w-[110px] shrink-0">
+                          <SelectValue placeholder="Label" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Father">Father</SelectItem>
+                          <SelectItem value="Mother">Mother</SelectItem>
+                          <SelectItem value="Friend">Friend</SelectItem>
+                          <SelectItem value="Spouse">Spouse</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={mobile3}
+                        onChange={(e) => setMobile3(e.target.value)}
+                        inputMode="numeric"
+                        placeholder="10-digit mobile"
+                        className="flex-1 min-w-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Mobile 4 (Optional)</Label>
+                    <div className="flex gap-2 sm:w-[calc(50%-0.5rem)]">
+                      <Select value={mobile4Label} onValueChange={setMobile4Label}>
+                        <SelectTrigger className="w-[110px] shrink-0">
+                          <SelectValue placeholder="Label" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Father">Father</SelectItem>
+                          <SelectItem value="Mother">Mother</SelectItem>
+                          <SelectItem value="Friend">Friend</SelectItem>
+                          <SelectItem value="Spouse">Spouse</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={mobile4}
+                        onChange={(e) => setMobile4(e.target.value)}
+                        inputMode="numeric"
+                        placeholder="10-digit mobile"
+                        className="flex-1 min-w-0"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">

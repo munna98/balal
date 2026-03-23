@@ -1,12 +1,13 @@
 import { format } from 'date-fns'
 import { prisma } from '@/lib/prisma'
 import { getTenantShopsAndActiveShop } from '@/lib/server/dashboard'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { RiskBadge } from '@/components/customers/RiskBadge'
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
+import { AddAdvanceDialog } from '@/components/advances/AddAdvanceDialog'
 
 function toNumber(value: unknown) {
   if (typeof value === 'number') return value
@@ -18,6 +19,7 @@ function toNumber(value: unknown) {
 
 type SaleWithAdvancesAndShop = {
   id: string
+  shop_id: string
   shop: { name: string }
   device_name: string
   loan_amount: unknown
@@ -30,11 +32,12 @@ type SaleWithAdvancesAndShop = {
   }[]
 }
 
-export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
-  const { tenant } = await getTenantShopsAndActiveShop()
+export default async function CustomerDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
+  const { tenant, activeShop } = await getTenantShopsAndActiveShop()
 
-  if (!tenant) {
-    return <main className="space-y-4">Unauthorized</main>
+  if (!tenant || !activeShop) {
+    return <main className="space-y-4">Unauthorized or no active shop</main>
   }
 
   const customer = await prisma.customer.findFirst({
@@ -121,10 +124,10 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         </CardHeader>
         <CardContent>
           {sales.length ? (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {sales.map((sale) => (
-                <Card key={sale.id} className="p-4">
-                  <div className="space-y-2">
+                <Card key={sale.id} className="flex flex-col h-full bg-muted/30">
+                  <div className="flex-1 p-4 space-y-3">
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-0.5">
                         <div className="text-sm font-medium">{sale.shop.name}</div>
@@ -135,27 +138,42 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                       </div>
                     </div>
 
-                    <Table>
+                    <Table className="pointer-events-none">
                       <TableBody>
-                        <TableRow>
-                          <TableCell className="text-muted-foreground">Loan</TableCell>
-                          <TableCell className="font-medium">{toNumber(sale.loan_amount).toFixed(2)}</TableCell>
+                        <TableRow className="border-none hover:bg-transparent">
+                          <TableCell className="p-1 pb-0.5 text-xs text-muted-foreground">Loan</TableCell>
+                          <TableCell className="p-1 pb-0.5 text-xs font-medium text-right">{toNumber(sale.loan_amount).toFixed(2)}</TableCell>
                         </TableRow>
-                        <TableRow>
-                          <TableCell className="text-muted-foreground">Tenure</TableCell>
-                          <TableCell className="font-medium">{sale.tenure_months} months</TableCell>
+                        <TableRow className="border-none hover:bg-transparent">
+                          <TableCell className="p-1 pb-0.5 text-xs text-muted-foreground">Tenure</TableCell>
+                          <TableCell className="p-1 pb-0.5 text-xs font-medium text-right">{sale.tenure_months} mo</TableCell>
                         </TableRow>
-                        <TableRow>
-                          <TableCell className="text-muted-foreground">EMI</TableCell>
-                          <TableCell className="font-medium">{toNumber(sale.emi_amount).toFixed(2)}</TableCell>
+                        <TableRow className="border-none hover:bg-transparent">
+                          <TableCell className="p-1 pb-0.5 text-xs text-muted-foreground">EMI</TableCell>
+                          <TableCell className="p-1 pb-0.5 text-xs font-medium text-right">{toNumber(sale.emi_amount).toFixed(2)}</TableCell>
                         </TableRow>
-                        <TableRow>
-                          <TableCell className="text-muted-foreground">Date</TableCell>
-                          <TableCell className="font-medium">{format(new Date(sale.loan_issue_date), 'dd MMM yyyy')}</TableCell>
+                        <TableRow className="border-none hover:bg-transparent">
+                          <TableCell className="p-1 pb-0.5 text-xs text-muted-foreground">Date</TableCell>
+                          <TableCell className="p-1 pb-0.5 text-xs font-medium text-right">{format(new Date(sale.loan_issue_date), 'dd MMM yy')}</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
                   </div>
+                  <CardFooter className="p-4 pt-0">
+                    <div className="w-full flex gap-2">
+                      <Button asChild variant="outline" className="flex-1 bg-background" size="sm">
+                        <Link href={`/sales/${sale.id}`}>View Details</Link>
+                      </Button>
+                      {sale.shop_id === activeShop.id && (
+                        <div className="flex-1">
+                          {/* Force full width string on button inside dialog */}
+                          <div className="[&>button]:w-full [&>button]">
+                            <AddAdvanceDialog saleId={sale.id} shopId={activeShop.id} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
