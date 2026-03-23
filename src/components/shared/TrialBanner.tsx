@@ -1,18 +1,16 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { SUPPORT_WHATSAPP } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 
 const DISMISS_KEY = 'trial-banner-dismissed'
 
 export function TrialBanner({ daysLeft }: { daysLeft: number }) {
-  const [dismissed, setDismissed] = useState(false)
-
-  useEffect(() => {
-    const wasDismissed = sessionStorage.getItem(DISMISS_KEY) === '1'
-    setDismissed(wasDismissed)
-  }, [])
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return sessionStorage.getItem(DISMISS_KEY) === '1'
+  })
 
   const isUrgent = daysLeft <= 3
   const title = useMemo(() => {

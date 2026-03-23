@@ -38,14 +38,23 @@ export async function GET(request: Request) {
     })
     if (!shop) return NextResponse.json({ data: null, error: 'Shop not found' }, { status: 404 })
 
-    const sales = await prisma.sale.findMany({
+    type SaleApiList = {
+      advances: Array<{
+        amount_paid: { toNumber: () => number } | number
+        amount_repaid: ({ toNumber: () => number } | number) | null
+      }>
+      customer: { name: string }
+      advance_balance?: number
+    } & Record<string, unknown>
+
+    const sales = (await prisma.sale.findMany({
       where: { shop_id: shopId },
       include: {
         customer: { select: { id: true, name: true } },
         advances: true,
       },
       orderBy: { created_at: 'desc' },
-    })
+    })) as unknown as SaleApiList[]
 
     const mapped = sales
       .map((sale) => {

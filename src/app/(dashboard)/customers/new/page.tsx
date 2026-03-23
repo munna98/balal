@@ -1,3 +1,249 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { RISK_LEVELS } from '@/lib/constants'
+import { useTenantFromDashboard } from '@/components/layout/active-shop-context'
+
+import type { RiskLevelKey } from '@/types'
+
+function isMobileDevice() {
+  if (typeof navigator === 'undefined') return false
+  return /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)
+}
+
 export default function NewCustomerPage() {
-  return <main>New customer</main>
+  const router = useRouter()
+  const tenant = useTenantFromDashboard()
+
+  const [name, setName] = useState('')
+  const [mobile1, setMobile1] = useState('')
+  const [aadhaar, setAadhaar] = useState('')
+  const [riskLevel, setRiskLevel] = useState<RiskLevelKey>('NEUTRAL')
+
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const mobile = useMemo(() => isMobileDevice(), [])
+
+  // Deferred photo upload: we only upload after customer is created.
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!photoFile) {
+      setPhotoPreviewUrl(null)
+      return
+    }
+    const url = URL.createObjectURL(photoFile)
+    setPhotoPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [photoFile])
+
+  async function checkDuplicateOnBlur(value: string) {
+    const v = value.trim()
+    if (v.length !== 10) {
+      setDuplicateWarning(null)
+      return
+    }
+    try {
+      const res = await fetch(`/api/customers?search=${encodeURIComponent(v)}`)
+      const json = (await res.json()) as { data?: { id: string; mobile1: string }[] }
+      const hasExact = (json.data || []).some((c) => c.mobile1 === v)
+      setDuplicateWarning(hasExact ? 'This mobile number already exists. Please verify.' : null)
+    } catch {
+      // Soft warning only: ignore errors.
+      setDuplicateWarning(null)
+    }
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError(null)
+
+    if (!tenant?.id) {
+      setError('Tenant not available.')
+      return
+    }
+
+    const trimmedName = name.trim()
+    const trimmedMobile1 = mobile1.trim()
+    if (!trimmedName || !trimmedMobile1) {
+      setError('Name and mobile are required.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      // 1) Create customer
+      const createRes = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: trimmedName,
+          mobile1: trimmedMobile1,
+          aadhaar: aadhaar.trim() ? aadhaar.trim() : undefined,
+          risk_level: riskLevel,
+        }),
+      })
+
+      const createJson = (await createRes.json()) as {
+        data?: { customer?: { id: string } }
+        error?: string
+        warning?: string | null
+      }
+
+      if (!createRes.ok || !createJson.data?.customer?.id) {
+        setError(createJson.error || 'Failed to create customer.')
+        return
+      }
+
+      const customerId = createJson.data.customer.id
+
+      // 2) Upload photo (if provided) + update customer photo_url
+      if (photoFile) {
+        const supabase = createClient()
+        const path = `${tenant.id}/customers/${customerId}/photo.jpg`
+        const { error: uploadError } = await supabase.storage.from('shop-assets').upload(path, photoFile, {
+          upsert: true,
+          contentType: photoFile.type || 'image/jpeg',
+        })
+        if (uploadError) throw uploadError
+
+        const { data } = supabase.storage.from('shop-assets').getPublicUrl(path)
+        const photoUrl = data.publicUrl
+
+        const updateRes = await fetch(`/api/customers/${customerId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photo_url: photoUrl }),
+        })
+        if (!updateRes.ok) {
+          setError('Customer created, but photo upload failed.')
+          return
+        }
+      }
+
+      // 3) Redirect
+      router.push(`/customers/${customerId}`)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <main className="space-y-4">
+      <h2 className="text-xl font-semibold">New Customer</h2>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Customer details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="flex flex-wrap items-start gap-4">
+              <div className="space-y-2">
+                <Avatar className="size-20">
+                  {photoPreviewUrl ? <AvatarImage src={photoPreviewUrl} alt="Customer photo preview" /> : null}
+                  <AvatarFallback>Photo</AvatarFallback>
+                </Avatar>
+              </div>
+
+              <div className="flex-1 space-y-2">
+                <Label>Photo</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  capture={mobile ? 'environment' : undefined}
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                />
+                <p className="text-xs text-muted-foreground">You can capture photo on mobile. Upload happens after submit.</p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="customer-name">Name</Label>
+                <Input id="customer-name" value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="customer-mobile1">Mobile</Label>
+                <Input
+                  id="customer-mobile1"
+                  value={mobile1}
+                  onChange={(e) => setMobile1(e.target.value)}
+                  onBlur={() => void checkDuplicateOnBlur(mobile1)}
+                  inputMode="numeric"
+                  placeholder="10-digit mobile"
+                  required
+                />
+                {duplicateWarning ? <p className="text-xs text-orange-600">{duplicateWarning}</p> : null}
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="customer-aadhaar">Aadhaar (optional)</Label>
+                <Input
+                  id="customer-aadhaar"
+                  value={aadhaar}
+                  onChange={(e) => setAadhaar(e.target.value)}
+                  inputMode="numeric"
+                  placeholder="12-digit aadhaar"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Risk level</Label>
+                <Select value={riskLevel} onValueChange={(v) => setRiskLevel(v as RiskLevelKey)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select risk level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(RISK_LEVELS) as RiskLevelKey[]).map((key) => {
+                      const r = RISK_LEVELS[key]
+                      return (
+                        <SelectItem key={key} value={key}>
+                          <span className={`inline-flex items-center gap-2`}>
+                            <span className={`size-2 rounded-full ${r.color.replace('bg-', 'bg-')}`} />
+                            {r.label}
+                          </span>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+                <div className="pt-1 text-xs">
+                  <span className={`inline-flex items-center rounded border px-2 py-0.5 ${RISK_LEVELS[riskLevel].color} text-white`}>
+                    {RISK_LEVELS[riskLevel].level} · {RISK_LEVELS[riskLevel].label}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="notes">Notes (optional)</Label>
+              <Textarea id="notes" placeholder="Any extra notes for this customer..." />
+            </div>
+
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? 'Creating...' : 'Create Customer'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </main>
+  )
 }

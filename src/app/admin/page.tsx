@@ -4,7 +4,19 @@ import { prisma } from '@/lib/prisma'
 import { TenantTable } from '@/components/admin/TenantTable'
 
 export default async function AdminPage() {
-  const tenants = await prisma.tenant.findMany({
+  type TenantAdminRow = {
+    id: string
+    name: string
+    supabase_user_id: string
+    phone: string | null
+    subscription_status: 'TRIAL' | 'ACTIVE' | 'SUSPENDED'
+    trial_ends_at: Date | null
+    subscribed_at: Date | null
+    created_at: Date
+    _count: { shops: number; customers: number }
+  }
+
+  const tenants = (await prisma.tenant.findMany({
     orderBy: { created_at: 'desc' },
     include: {
       _count: {
@@ -14,7 +26,7 @@ export default async function AdminPage() {
         },
       },
     },
-  })
+  })) as unknown as TenantAdminRow[]
 
   const thisMonthStart = startOfMonth(new Date())
 

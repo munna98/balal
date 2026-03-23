@@ -37,7 +37,11 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
     if (!customer) return NextResponse.json({ data: null, error: 'Customer not found' }, { status: 404 })
 
-    const sales = customer.sales.map((sale) => {
+    type SaleApiShape = {
+      advances: Array<{ amount_paid: { toNumber: () => number } | number; amount_repaid: ({ toNumber: () => number } | number) | null }>
+    } & Record<string, unknown>
+
+    const sales = (customer.sales as unknown as SaleApiShape[]).map((sale) => {
       const totalPaid = sale.advances.reduce((sum, a) => sum + toNumber(a.amount_paid), 0)
       const totalRepaid = sale.advances.reduce((sum, a) => sum + (a.amount_repaid ? toNumber(a.amount_repaid) : 0), 0)
       const balance = totalPaid - totalRepaid

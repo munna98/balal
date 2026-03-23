@@ -25,8 +25,8 @@ export function ImeiScanner({
     let active = true
 
     async function startScanner() {
-      const module = await import('html5-qrcode')
-      const Html5Qrcode = module.Html5Qrcode as new (id: string) => {
+      const html5QrcodeModule = await import('html5-qrcode')
+      const Html5Qrcode = html5QrcodeModule.Html5Qrcode as new (id: string) => {
         start: (...args: unknown[]) => Promise<unknown>
         stop: () => Promise<unknown>
         clear: () => void

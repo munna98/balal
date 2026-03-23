@@ -38,8 +38,15 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     })
     if (!sale) return NextResponse.json({ data: null, error: 'Sale not found' }, { status: 404 })
 
-    const totalPaid = sale.advances.reduce((sum, a) => sum + toNumber(a.amount_paid), 0)
-    const totalRepaid = sale.advances.reduce((sum, a) => sum + (a.amount_repaid ? toNumber(a.amount_repaid) : 0), 0)
+    type AdvanceForSaleApi = {
+      amount_paid: { toNumber: () => number } | number
+      amount_repaid: ({ toNumber: () => number } | number) | null
+    }
+
+    const advances = sale.advances as unknown as AdvanceForSaleApi[]
+
+    const totalPaid = advances.reduce((sum, a) => sum + toNumber(a.amount_paid), 0)
+    const totalRepaid = advances.reduce((sum, a) => sum + (a.amount_repaid ? toNumber(a.amount_repaid) : 0), 0)
     const balance = totalPaid - totalRepaid
 
     return NextResponse.json({

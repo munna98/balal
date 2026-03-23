@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 function getDaysAgo(date: Date) {
-  const diffMs = Date.now() - date.getTime()
+  const nowMs = new Date().getTime()
+  const diffMs = nowMs - date.getTime()
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)))
 }
 
@@ -34,7 +35,8 @@ export default async function BillingPage() {
   }
 
   const isSuspended = tenant.subscription_status === 'SUSPENDED'
-  const hasTrialEnded = Boolean(tenant.trial_ends_at && tenant.trial_ends_at.getTime() < Date.now())
+  const nowMs = new Date().getTime()
+  const hasTrialEnded = Boolean(tenant.trial_ends_at && tenant.trial_ends_at.getTime() < nowMs)
   const daysAgo = tenant.trial_ends_at ? getDaysAgo(tenant.trial_ends_at) : 0
 
   const heading = isSuspended ? 'Your account is suspended' : 'Your trial has ended'

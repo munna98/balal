@@ -16,7 +16,28 @@ export default async function AdminTenantDetailPage({
 }) {
   const { id } = await params
 
-  const tenant = await prisma.tenant.findUnique({
+  type TenantAdminShop = {
+    id: string
+    name: string
+    is_active: boolean
+    _count: { sales: number }
+  }
+
+  type TenantAdminDetail = {
+    id: string
+    name: string
+    supabase_user_id: string
+    phone: string | null
+    subscription_status: 'TRIAL' | 'ACTIVE' | 'SUSPENDED'
+    trial_ends_at: Date | null
+    subscribed_at: Date | null
+    created_at: Date
+    admin_notes: string | null
+    shops: TenantAdminShop[]
+    _count: { customers: number }
+  }
+
+  const tenant = (await prisma.tenant.findUnique({
     where: { id },
     include: {
       shops: {
@@ -33,7 +54,7 @@ export default async function AdminTenantDetailPage({
         },
       },
     },
-  })
+  })) as unknown as TenantAdminDetail
 
   if (!tenant) notFound()
 
@@ -43,7 +64,12 @@ export default async function AdminTenantDetailPage({
     },
   })
 
-  const advances = await prisma.advance.findMany({
+  type AdvanceForAdminTenant = {
+    amount_paid: unknown
+    amount_repaid: unknown | null
+  }
+
+  const advances = (await prisma.advance.findMany({
     where: {
       shop: { tenant_id: tenant.id },
     },
@@ -51,7 +77,7 @@ export default async function AdminTenantDetailPage({
       amount_paid: true,
       amount_repaid: true,
     },
-  })
+  })) as unknown as AdvanceForAdminTenant[]
 
   const totalOutstanding = advances.reduce((sum, advance) => {
     const paid = Number(advance.amount_paid)
@@ -73,7 +99,8 @@ export default async function AdminTenantDetailPage({
     revalidatePath(`/admin/tenants/${id}`)
   }
 
-  const statusMeta = SUBSCRIPTION_STATUS_LABELS[tenant.subscription_status]
+  const statusMeta =
+    SUBSCRIPTION_STATUS_LABELS[tenant.subscription_status as keyof typeof SUBSCRIPTION_STATUS_LABELS]
 
   return (
     <main className="space-y-6 p-4 md:p-6">

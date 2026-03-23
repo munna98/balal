@@ -1,8 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
-import type { Advance } from '@/types'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,18 +14,26 @@ import {
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { AdvanceForm, type AdvanceFormValues } from '@/components/advances/AdvanceForm'
 
+export type AdvanceLedgerAdvance = {
+  id: string
+  paid_date: string | Date
+  amount_paid: number | { toNumber: () => number }
+  repaid_date: string | Date | null
+  amount_repaid: number | null | { toNumber: () => number }
+  note: string | null
+}
+
 function toNumber(value: number | { toNumber: () => number }) {
   return typeof value === 'number' ? value : value.toNumber()
 }
 
 export function AdvanceLedger({
   advances,
-  onRepaymentSaved,
 }: {
-  advances: Advance[]
-  onRepaymentSaved: () => void
+  advances: AdvanceLedgerAdvance[]
 }) {
-  const [activeAdvance, setActiveAdvance] = useState<Advance | null>(null)
+  const router = useRouter()
+  const [activeAdvance, setActiveAdvance] = useState<AdvanceLedgerAdvance | null>(null)
 
   const rows = useMemo(
     () =>
@@ -56,7 +64,7 @@ export function AdvanceLedger({
       body: JSON.stringify(values),
     })
     setActiveAdvance(null)
-    onRepaymentSaved()
+    router.refresh()
   }
 
   return (
