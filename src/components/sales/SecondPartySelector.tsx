@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { CustomerForm } from '@/components/customers/CustomerForm'
+import { CustomerForm, type CustomerFormSubmit } from '@/components/customers/CustomerForm'
 import { CustomerLookupField, type CustomerLookupItem } from '@/components/customers/CustomerLookupField'
+import { useTenantFromDashboard } from '@/components/layout/active-shop-context'
 
 export function SecondPartySelector({
   selectedCustomer,
@@ -14,20 +17,36 @@ export function SecondPartySelector({
   enabled,
   onEnabledChange,
   onSelect,
+  customers,
+  onCustomerCreated,
 }: {
   selectedCustomer: CustomerLookupItem | null
   excludedCustomerIds?: string[]
   enabled: boolean
   onEnabledChange: (value: boolean) => void
   onSelect: (customer: CustomerLookupItem | null) => void
+  customers?: CustomerLookupItem[]
+  onCustomerCreated?: (customer: CustomerLookupItem) => void
 }) {
   const [open, setOpen] = useState(false)
+  const tenant = useTenantFromDashboard()
 
-  async function createCustomer(values: { name: string; mobile1: string; aadhaar?: string }) {
+  async function createCustomer(values: CustomerFormSubmit) {
     const response = await fetch('/api/customers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
+      body: JSON.stringify({
+        name: values.name.trim(),
+        mobile1: values.mobile1.trim(),
+        aadhaar: values.aadhaar?.trim() || undefined,
+        risk_level: values.risk_level,
+        mobile2: values.mobile2?.trim() || undefined,
+        mobile2_label: values.mobile2_label?.trim() || undefined,
+        mobile3: values.mobile3?.trim() || undefined,
+        mobile3_label: values.mobile3_label?.trim() || undefined,
+        mobile4: values.mobile4?.trim() || undefined,
+        mobile4_label: values.mobile4_label?.trim() || undefined,
+      }),
     })
     const json = (await response.json()) as {
       data?: {
@@ -43,7 +62,33 @@ export function SecondPartySelector({
 
     if (!response.ok || !json.data?.customer) return
 
-    onSelect(json.data.customer)
+    let customer = json.data.customer
+
+    if (values.photoFile && tenant?.id) {
+      const supabase = createClient()
+      const path = `${tenant.id}/customers/${customer.id}/photo.jpg`
+      const { error: uploadError } = await supabase.storage.from('shop-assets').upload(path, values.photoFile, {
+        upsert: true,
+        contentType: values.photoFile.type || 'image/jpeg',
+      })
+
+      if (!uploadError) {
+        const { data } = supabase.storage.from('shop-assets').getPublicUrl(path)
+        const photoUrl = data.publicUrl
+        const updateRes = await fetch(`/api/customers/${customer.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photo_url: photoUrl }),
+        })
+
+        if (updateRes.ok) {
+          customer = { ...customer, photo_url: photoUrl }
+        }
+      }
+    }
+
+    onCustomerCreated?.(customer)
+    onSelect(customer)
     setOpen(false)
   }
 
@@ -68,10 +113,14 @@ export function SecondPartySelector({
             selectedCustomer={selectedCustomer}
             onSelect={onSelect}
             excludeIds={excludedCustomerIds}
+            customers={customers}
+            action={
+              <Button type="button" variant="outline" size="icon" className="sm:w-auto sm:px-3" onClick={() => setOpen(true)}>
+                <Plus className="size-4" />
+                <span className="sr-only sm:not-sr-only sm:ml-2">Create new customer</span>
+              </Button>
+            }
           />
-          <Button type="button" variant="outline" onClick={() => setOpen(true)}>
-            Create new customer
-          </Button>
         </div>
       ) : null}
 

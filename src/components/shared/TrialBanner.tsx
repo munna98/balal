@@ -1,16 +1,28 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
 import { SUPPORT_WHATSAPP } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 
 const DISMISS_KEY = 'trial-banner-dismissed'
 
+function subscribe(onStoreChange: () => void) {
+  window.addEventListener('storage', onStoreChange)
+  return () => window.removeEventListener('storage', onStoreChange)
+}
+
+function getDismissedSnapshot() {
+  return sessionStorage.getItem(DISMISS_KEY) === '1'
+}
+
+function getDismissedServerSnapshot() {
+  return false
+}
+
 export function TrialBanner({ daysLeft }: { daysLeft: number }) {
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return sessionStorage.getItem(DISMISS_KEY) === '1'
-  })
+  const dismissedFromStorage = useSyncExternalStore(subscribe, getDismissedSnapshot, getDismissedServerSnapshot)
+  const [dismissedInSession, setDismissedInSession] = useState(false)
+  const dismissed = dismissedInSession || dismissedFromStorage
 
   const isUrgent = daysLeft <= 3
   const title = useMemo(() => {
@@ -38,7 +50,7 @@ export function TrialBanner({ daysLeft }: { daysLeft: number }) {
           variant="ghost"
           onClick={() => {
             sessionStorage.setItem(DISMISS_KEY, '1')
-            setDismissed(true)
+            setDismissedInSession(true)
           }}
         >
           Dismiss
