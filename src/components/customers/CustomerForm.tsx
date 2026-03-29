@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { CustomerPhotoPicker } from '@/components/customers/CustomerPhotoPicker'
+import { formatAadhaarInput, normalizeAadhaarInput } from '@/lib/aadhaar'
 
 export type CustomerFormSubmit = {
   name: string
@@ -38,7 +39,7 @@ export function CustomerForm({
 }) {
   const [name, setName] = useState(defaultValues?.name || '')
   const [mobile1, setMobile1] = useState(defaultValues?.mobile1 || '')
-  const [aadhaar, setAadhaar] = useState(defaultValues?.aadhaar || '')
+  const [aadhaar, setAadhaar] = useState(normalizeAadhaarInput(defaultValues?.aadhaar || ''))
   const [riskLevel, setRiskLevel] = useState<RiskLevelKey>((defaultValues?.risk_level as RiskLevelKey | undefined) || 'NEUTRAL')
   const [mobile2, setMobile2] = useState(defaultValues?.mobile2 || '')
   const [mobile2Label, setMobile2Label] = useState(defaultValues?.mobile2_label || 'Father')
@@ -129,10 +130,11 @@ export function CustomerForm({
           <Label htmlFor="customer-aadhaar">Aadhaar (optional)</Label>
           <Input
             id="customer-aadhaar"
-            value={aadhaar}
-            onChange={(event) => setAadhaar(event.target.value)}
+            value={formatAadhaarInput(aadhaar)}
+            onChange={(event) => setAadhaar(normalizeAadhaarInput(event.target.value))}
             inputMode="numeric"
-            placeholder="12-digit aadhaar"
+            maxLength={14}
+            placeholder="1234-5678-9012"
           />
         </div>
 

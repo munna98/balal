@@ -13,6 +13,7 @@ import { RISK_LEVELS } from '@/lib/constants'
 import { useTenantFromDashboard } from '@/components/layout/active-shop-context'
 import { CustomerPhotoPicker } from '@/components/customers/CustomerPhotoPicker'
 import { Input } from '@/components/ui/input'
+import { formatAadhaarInput, normalizeAadhaarInput } from '@/lib/aadhaar'
 
 import type { RiskLevelKey } from '@/types'
 
@@ -97,7 +98,7 @@ export default function NewCustomerPage() {
         body: JSON.stringify({
           name: trimmedName,
           mobile1: trimmedMobile1,
-          aadhaar: aadhaar.trim() ? aadhaar.trim() : undefined,
+          aadhaar: aadhaar || undefined,
           risk_level: riskLevel,
           mobile2: mobile2.trim() ? mobile2.trim() : undefined,
           mobile2_label: mobile2Label.trim() ? mobile2Label.trim() : undefined,
@@ -192,10 +193,11 @@ export default function NewCustomerPage() {
                 <Label htmlFor="customer-aadhaar">Aadhaar (optional)</Label>
                 <Input
                   id="customer-aadhaar"
-                  value={aadhaar}
-                  onChange={(e) => setAadhaar(e.target.value)}
+                  value={formatAadhaarInput(aadhaar)}
+                  onChange={(e) => setAadhaar(normalizeAadhaarInput(e.target.value))}
                   inputMode="numeric"
-                  placeholder="12-digit aadhaar"
+                  maxLength={14}
+                  placeholder="1234-5678-9012"
                 />
               </div>
 
