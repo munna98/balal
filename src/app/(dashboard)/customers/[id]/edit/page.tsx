@@ -12,6 +12,7 @@ import { BackButton } from '@/components/shared/BackButton'
 import { RISK_LEVELS } from '@/lib/constants'
 import { useTenantFromDashboard } from '@/components/layout/active-shop-context'
 import { CustomerPhotoPicker } from '@/components/customers/CustomerPhotoPicker'
+import { formatAadhaarInput, normalizeAadhaarInput } from '@/lib/aadhaar'
 import type { RiskLevelKey } from '@/types'
 
 export default function EditCustomerPage(props: { params: Promise<{ id: string }> }) {
@@ -49,7 +50,7 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
           const c = json.data.customer
           setName(c.name || '')
           setMobile1(c.mobile1 || '')
-          setAadhaar(c.aadhaar || '')
+          setAadhaar(normalizeAadhaarInput(c.aadhaar || ''))
           setRiskLevel((c.risk_level as RiskLevelKey) || 'NEUTRAL')
           setExistingPhotoUrl(c.photo_url || null)
 
@@ -113,7 +114,7 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
         body: JSON.stringify({
           name: trimmedName,
           mobile1: trimmedMobile1,
-          aadhaar: aadhaar.trim() ? aadhaar.trim() : undefined,
+          aadhaar: aadhaar || undefined,
           risk_level: riskLevel,
           photo_url: finalPhotoUrl,
           mobile2: mobile2.trim() ? mobile2.trim() : undefined,
@@ -185,9 +186,11 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
                 <Label htmlFor="customer-aadhaar">Aadhaar (optional)</Label>
                 <Input
                   id="customer-aadhaar"
-                  value={aadhaar}
-                  onChange={(e) => setAadhaar(e.target.value)}
+                  value={formatAadhaarInput(aadhaar)}
+                  onChange={(e) => setAadhaar(normalizeAadhaarInput(e.target.value))}
                   inputMode="numeric"
+                  maxLength={14}
+                  placeholder="1234-5678-9012"
                 />
               </div>
 
