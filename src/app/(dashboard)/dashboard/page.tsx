@@ -38,53 +38,64 @@ export default async function DashboardPage() {
     return <main className="space-y-4">No active shop configured.</main>
   }
 
-  const totalCustomers = await prisma.customer.count({ where: { tenant_id: tenant.id } })
-  const totalDangerWarningCustomers = await prisma.customer.count({
-    where: { tenant_id: tenant.id, risk_level: { in: ['DANGER', 'WARNING'] } },
-  })
-
   const thisMonthStart = startOfMonth(new Date())
   const nextMonthStart = addMonths(thisMonthStart, 1)
 
-  const totalSalesThisMonth = await prisma.sale.count({
-    where: {
-      shop_id: activeShop.id,
-      loan_issue_date: { gte: thisMonthStart, lt: nextMonthStart },
-    },
-  })
+  // Run all queries in parallel instead of sequentially
+  const [
+    totalCustomers,
+    totalDangerWarningCustomers,
+    totalSalesThisMonth,
+    shopEmiCovers,
+    lastSales,
+    salesForTopCustomers,
+  ] = await Promise.all([
+    prisma.customer.count({ where: { tenant_id: tenant.id } }),
+    prisma.customer.count({
+      where: { tenant_id: tenant.id, risk_level: { in: ['DANGER', 'WARNING'] } },
+    }),
+    prisma.sale.count({
+      where: {
+        shop_id: activeShop.id,
+        loan_issue_date: { gte: thisMonthStart, lt: nextMonthStart },
+      },
+    }),
+    prisma.emiCover.findMany({
+      where: { shop_id: activeShop.id },
+      select: { amount_paid: true, amount_repaid: true },
+    }),
+    prisma.sale.findMany({
+      where: { shop_id: activeShop.id },
+      include: { customer: { select: { id: true, name: true } } },
+      orderBy: { loan_issue_date: 'desc' },
+      take: 5,
+    }),
+    prisma.sale.findMany({
+      where: { shop_id: activeShop.id },
+      select: {
+        customer_id: true,
+        customer: { select: { id: true, name: true, mobile1: true } },
+        emi_covers: { select: { amount_paid: true, amount_repaid: true } },
+      },
+    }),
+  ])
 
-  const shopEmiCovers = (await prisma.emiCover.findMany({
-    where: { shop_id: activeShop.id },
-    select: { amount_paid: true, amount_repaid: true },
-  })) as unknown as Array<{ amount_paid: unknown; amount_repaid: unknown | null }>
-  const outstandingEmiCoverBalance = shopEmiCovers.reduce((sum, a) => {
+  const typedShopEmiCovers = shopEmiCovers as unknown as Array<{ amount_paid: unknown; amount_repaid: unknown | null }>
+  const outstandingEmiCoverBalance = typedShopEmiCovers.reduce((sum, a) => {
     const paid = toNumber(a.amount_paid)
     const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
     return sum + (paid - repaid)
   }, 0)
 
-  const lastSales = (await prisma.sale.findMany({
-    where: { shop_id: activeShop.id },
-    include: { customer: { select: { id: true, name: true } } },
-    orderBy: { loan_issue_date: 'desc' },
-    take: 5,
-  })) as unknown as LastSaleRow[]
-
-  const salesForTopCustomers = (await prisma.sale.findMany({
-    where: { shop_id: activeShop.id },
-    select: {
-      customer_id: true,
-      customer: { select: { id: true, name: true, mobile1: true } },
-      emi_covers: { select: { amount_paid: true, amount_repaid: true } },
-    },
-  })) as unknown as SaleForTopCustomer[]
+  const typedLastSales = lastSales as unknown as LastSaleRow[]
+  const typedSalesForTopCustomers = salesForTopCustomers as unknown as SaleForTopCustomer[]
 
   const outstandingByCustomer = new Map<
     string,
     { id: string; name: string; mobile1: string; balance: number }
   >()
 
-  for (const sale of salesForTopCustomers) {
+  for (const sale of typedSalesForTopCustomers) {
     const saleBalance = sale.emi_covers.reduce((sum, a) => {
       const paid = toNumber(a.amount_paid)
       const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
@@ -150,8 +161,8 @@ export default async function DashboardPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-3 md:hidden">
-            {lastSales.length ? (
-              lastSales.map((sale) => (
+            {typedLastSales.length ? (
+              typedLastSales.map((sale) => (
                 <div key={sale.id} className="rounded-lg border bg-background p-3 shadow-sm">
                   <div className="space-y-3">
                     <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
@@ -189,8 +200,8 @@ export default async function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lastSales.length ? (
-                  lastSales.map((sale) => (
+                {typedLastSales.length ? (
+                  typedLastSales.map((sale) => (
                     <TableRow key={sale.id}>
                       <TableCell>
                         <div className="font-medium">{sale.customer.name}</div>

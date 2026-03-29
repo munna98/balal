@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -43,6 +43,7 @@ export default function NewCustomerPage() {
   const [error, setError] = useState<string | null>(null)
 
   const mobile = useMemo(() => isMobileDevice(), [])
+  const duplicateCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Deferred photo upload: we only upload after customer is created.
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -58,22 +59,35 @@ export default function NewCustomerPage() {
     return () => URL.revokeObjectURL(url)
   }, [photoFile])
 
-  async function checkDuplicateOnBlur(value: string) {
-    const v = value.trim()
+  // Debounced duplicate check on mobile1 change
+  useEffect(() => {
+    if (duplicateCheckTimeoutRef.current) {
+      clearTimeout(duplicateCheckTimeoutRef.current)
+    }
+
+    const v = mobile1.trim()
     if (v.length !== 10) {
       setDuplicateWarning(null)
       return
     }
-    try {
-      const res = await fetch(`/api/customers?search=${encodeURIComponent(v)}`)
-      const json = (await res.json()) as { data?: { id: string; mobile1: string }[] }
-      const hasExact = (json.data || []).some((c) => c.mobile1 === v)
-      setDuplicateWarning(hasExact ? 'This mobile number already exists. Please verify.' : null)
-    } catch {
-      // Soft warning only: ignore errors.
-      setDuplicateWarning(null)
+
+    duplicateCheckTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/customers?search=${encodeURIComponent(v)}`)
+        const json = (await res.json()) as { data?: { id: string; mobile1: string }[] }
+        const hasExact = (json.data || []).some((c) => c.mobile1 === v)
+        setDuplicateWarning(hasExact ? 'This mobile number already exists. Please verify.' : null)
+      } catch {
+        setDuplicateWarning(null)
+      }
+    }, 300) // 300ms debounce delay
+
+    return () => {
+      if (duplicateCheckTimeoutRef.current) {
+        clearTimeout(duplicateCheckTimeoutRef.current)
+      }
     }
-  }
+  }, [mobile1])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -200,7 +214,6 @@ export default function NewCustomerPage() {
                   id="customer-mobile1"
                   value={mobile1}
                   onChange={(e) => setMobile1(e.target.value)}
-                  onBlur={() => void checkDuplicateOnBlur(mobile1)}
                   inputMode="numeric"
                   placeholder="10-digit mobile"
                   required

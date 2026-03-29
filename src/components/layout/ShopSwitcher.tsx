@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -23,6 +23,7 @@ function writeCookie(name: string, value: string) {
 
 export function ShopSwitcher({ shops }: { shops: ShopItem[] }) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const defaultValue = useMemo(() => {
     const fromCookie = readCookie(ACTIVE_SHOP_COOKIE)
     if (fromCookie && shops.some((shop) => shop.id === fromCookie)) return fromCookie
@@ -34,12 +35,15 @@ export function ShopSwitcher({ shops }: { shops: ShopItem[] }) {
   return (
     <Select
       defaultValue={defaultValue}
+      disabled={isPending}
       onValueChange={(value) => {
         writeCookie(ACTIVE_SHOP_COOKIE, value)
-        router.refresh()
+        startTransition(() => {
+          router.refresh()
+        })
       }}
     >
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="w-full opacity-75">
         <SelectValue placeholder="Select shop" />
       </SelectTrigger>
       <SelectContent>
