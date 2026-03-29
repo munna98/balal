@@ -28,7 +28,7 @@ export default function MarketingFooter() {
               </span>
             </div>
             <p className="text-xs text-gray-500 max-w-xs">
-              Helping mobile retailers manage Bajaj EMI sales, customer risk, and EMI cover payments with ease.
+              Helping mobile retailers manage Bajaj EMI sales, customer risk, and payment tracking with ease.
             </p>
           </div>
 

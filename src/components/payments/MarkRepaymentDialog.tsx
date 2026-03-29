@@ -10,14 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { EmiCoverForm, type EmiCoverFormValues } from '@/components/emi-covers/EmiCoverForm'
+import { PaymentForm, type PaymentFormValues } from '@/components/payments/PaymentForm'
 
-export function MarkRepaymentDialog({ emiCover }: { emiCover: { id: string; note?: string | null } }) {
+export function MarkRepaymentDialog({ payment }: { payment: { id: string; note?: string | null } }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
 
-  async function save(values: EmiCoverFormValues) {
-    const res = await fetch(`/api/emi-covers/${emiCover.id}`, {
+  async function save(values: PaymentFormValues) {
+    const res = await fetch(`/api/payments/${payment.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(values),
@@ -39,9 +39,9 @@ export function MarkRepaymentDialog({ emiCover }: { emiCover: { id: string; note
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Mark repayment</DialogTitle>
-            <DialogDescription>Update repayment details for this EMI cover.</DialogDescription>
+            <DialogDescription>Update repayment details for this payment.</DialogDescription>
           </DialogHeader>
-          <EmiCoverForm mode="repayment" emiCover={emiCover} onSubmit={save} />
+          <PaymentForm mode="repayment" payment={payment} onSubmit={save} />
         </DialogContent>
       </Dialog>
     </>

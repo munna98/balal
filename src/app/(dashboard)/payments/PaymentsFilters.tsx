@@ -10,34 +10,34 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  type EmiCoverStatusTab,
+  type PaymentStatusTab,
   type AgingFilter,
-  emiCoversListPath,
-} from './emi-covers-search-params'
+  paymentsListPath,
+} from './payments-search-params'
 
 type Props = {
-  tab: EmiCoverStatusTab
+  tab: PaymentStatusTab
   aging: AgingFilter
 }
 
-export function EmiCoversFilters({ tab, aging }: Props) {
+export function PaymentsFilters({ tab, aging }: Props) {
   const router = useRouter()
 
   return (
     <div className="flex flex-wrap items-end gap-4">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="emi_covers-status" className="text-muted-foreground text-xs">
+        <Label htmlFor="payments-status" className="text-muted-foreground text-xs">
           Status
         </Label>
         <Select
           value={tab}
           onValueChange={(value) =>
-            router.push(emiCoversListPath(value as EmiCoverStatusTab, aging), {
+            router.push(paymentsListPath(value as PaymentStatusTab, aging), {
               scroll: false,
             })
           }
         >
-          <SelectTrigger id="emi_covers-status" size="sm" className="min-w-[10.5rem]">
+          <SelectTrigger id="payments-status" size="sm" className="min-w-[10.5rem]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -49,18 +49,18 @@ export function EmiCoversFilters({ tab, aging }: Props) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="emi_covers-aging" className="text-muted-foreground text-xs">
+        <Label htmlFor="payments-aging" className="text-muted-foreground text-xs">
           Aging
         </Label>
         <Select
           value={aging}
           onValueChange={(value) =>
-            router.push(emiCoversListPath(tab, value as AgingFilter), {
+            router.push(paymentsListPath(tab, value as AgingFilter), {
               scroll: false,
             })
           }
         >
-          <SelectTrigger id="emi_covers-aging" size="sm" className="min-w-[10.5rem]">
+          <SelectTrigger id="payments-aging" size="sm" className="min-w-[10.5rem]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

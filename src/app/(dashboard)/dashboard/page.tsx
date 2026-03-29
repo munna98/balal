@@ -16,7 +16,7 @@ function toNumber(value: unknown) {
 type SaleForTopCustomer = {
   customer_id: string
   customer: { id: string; name: string; mobile1: string }
-  emi_covers: { amount_paid: unknown; amount_repaid: unknown | null }[]
+  payments: { amount_paid: unknown; amount_repaid: unknown | null }[]
 }
 
 type LastSaleRow = {
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
     totalCustomers,
     totalDangerWarningCustomers,
     totalSalesThisMonth,
-    shopEmiCovers,
+    shopPayments,
     lastSales,
     salesForTopCustomers,
   ] = await Promise.all([
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
         loan_issue_date: { gte: thisMonthStart, lt: nextMonthStart },
       },
     }),
-    prisma.emiCover.findMany({
+    prisma.payment.findMany({
       where: { shop_id: activeShop.id },
       select: { amount_paid: true, amount_repaid: true },
     }),
@@ -75,13 +75,13 @@ export default async function DashboardPage() {
       select: {
         customer_id: true,
         customer: { select: { id: true, name: true, mobile1: true } },
-        emi_covers: { select: { amount_paid: true, amount_repaid: true } },
+        payments: { select: { amount_paid: true, amount_repaid: true } },
       },
     }),
   ])
 
-  const typedShopEmiCovers = shopEmiCovers as unknown as Array<{ amount_paid: unknown; amount_repaid: unknown | null }>
-  const outstandingEmiCoverBalance = typedShopEmiCovers.reduce((sum, a) => {
+  const typedShopPayments = shopPayments as unknown as Array<{ amount_paid: unknown; amount_repaid: unknown | null }>
+  const outstandingPaymentBalance = typedShopPayments.reduce((sum, a) => {
     const paid = toNumber(a.amount_paid)
     const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
     return sum + (paid - repaid)
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
   >()
 
   for (const sale of typedSalesForTopCustomers) {
-    const saleBalance = sale.emi_covers.reduce((sum, a) => {
+    const saleBalance = sale.payments.reduce((sum, a) => {
       const paid = toNumber(a.amount_paid)
       const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
       return sum + (paid - repaid)
@@ -138,10 +138,10 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Outstanding EMI cover balance</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Outstanding Payment balance</CardTitle>
           </CardHeader>
-          <CardContent className={`text-2xl font-semibold ${outstandingEmiCoverBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {outstandingEmiCoverBalance.toFixed(2)}
+          <CardContent className={`text-2xl font-semibold ${outstandingPaymentBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {outstandingPaymentBalance.toFixed(2)}
           </CardContent>
         </Card>
 
@@ -253,7 +253,7 @@ export default async function DashboardPage() {
               ))
             ) : (
               <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                No outstanding EMI covers yet.
+                No outstanding Payments yet.
               </div>
             )}
           </div>
@@ -281,7 +281,7 @@ export default async function DashboardPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground">
-                      No outstanding EMI covers yet.
+                      No outstanding Payments yet.
                     </TableCell>
                   </TableRow>
                 )}

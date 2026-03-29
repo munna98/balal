@@ -4,7 +4,7 @@ const included = [
   'Unlimited customer profiles with Aadhaar & 4 contacts',
   '5-level color-coded risk flag system',
   'Full EMI sale records with IMEI tracking',
-  'EMI cover payment tracker per customer',
+  'Payment tracker per customer',
   'Multiple shop management under one account',
   'Cross-shop fraud detection',
   'Customer photo upload',

@@ -32,7 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { EmiCoverForm, type EmiCoverFormValues } from '@/components/emi-covers/EmiCoverForm'
+import { PaymentForm, type PaymentFormValues } from '@/components/payments/PaymentForm'
 import { formatLocaleDate } from '@/lib/format-date'
 
 export type SaleRow = {
@@ -53,7 +53,7 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   
-  const [emiCoverOpen, setEmiCoverOpen] = useState(false)
+  const [paymentOpen, setPaymentOpen] = useState(false)
 
   async function handleDelete() {
     setIsDeleting(true)
@@ -74,10 +74,10 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
     }
   }
 
-  async function handleAddEmiCover(values: EmiCoverFormValues) {
+  async function handleAddPayment(values: PaymentFormValues) {
     if (!values.paid_date || typeof values.amount_paid !== 'number') return
 
-    const res = await fetch('/api/emi-covers', {
+    const res = await fetch('/api/payments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -90,12 +90,12 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
     })
 
     if (!res.ok) {
-      toast.error('Failed to add EMI cover')
+      toast.error('Failed to add payment')
       return
     }
 
-    toast.success('EMI cover added successfully')
-    setEmiCoverOpen(false)
+    toast.success('Payment added successfully')
+    setPaymentOpen(false)
     router.refresh()
   }
 
@@ -123,10 +123,10 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault()
-              setEmiCoverOpen(true)
+              setPaymentOpen(true)
             }}
           >
-            <PlusCircle className="mr-2 size-4" /> Add EMI Cover
+            <PlusCircle className="mr-2 size-4" /> Add Payment
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -146,7 +146,7 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the sale for {sale.deviceName}. All related EMI covers will also be deleted.
+              This will permanently delete the sale for {sale.deviceName}. All related payments will also be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -165,13 +165,13 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={emiCoverOpen} onOpenChange={setEmiCoverOpen}>
+      <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add EMI cover</DialogTitle>
-            <DialogDescription>Record a new EMI cover for this loan.</DialogDescription>
+            <DialogTitle>Add Payment</DialogTitle>
+            <DialogDescription>Record a new payment for this loan.</DialogDescription>
           </DialogHeader>
-          <EmiCoverForm mode="create" onSubmit={handleAddEmiCover} />
+          <PaymentForm mode="create" onSubmit={handleAddPayment} />
         </DialogContent>
       </Dialog>
     </>

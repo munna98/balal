@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { RiskBadge } from '@/components/customers/RiskBadge'
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
-import { AddEmiCoverDialog } from '@/components/emi-covers/AddEmiCoverDialog'
+import { AddPaymentDialog } from '@/components/payments/AddPaymentDialog'
 import { BackButton } from '@/components/shared/BackButton'
 
 function toNumber(value: unknown) {
@@ -18,7 +18,7 @@ function toNumber(value: unknown) {
   return Number(value)
 }
 
-type SaleWithEmiCoversAndShop = {
+type SaleWithPaymentsAndShop = {
   id: string
   shop_id: string
   shop: { name: string }
@@ -27,7 +27,7 @@ type SaleWithEmiCoversAndShop = {
   tenure_months: number
   emi_amount: unknown
   loan_issue_date: Date
-  emi_covers: {
+  payments: {
     amount_paid: unknown
     amount_repaid: unknown | null
   }[]
@@ -45,7 +45,7 @@ export default async function CustomerDetailPage(props: { params: Promise<{ id: 
     where: { id: params.id, tenant_id: tenant.id },
     include: {
       sales: {
-        include: { shop: true, emi_covers: true },
+        include: { shop: true, payments: true },
         orderBy: { created_at: 'desc' },
       },
     },
@@ -55,9 +55,9 @@ export default async function CustomerDetailPage(props: { params: Promise<{ id: 
     return <main className="space-y-4">Customer not found</main>
   }
 
-  const sales = (customer.sales as unknown as SaleWithEmiCoversAndShop[]).map((sale) => {
-    const totalPaid = sale.emi_covers.reduce((sum, a) => sum + toNumber(a.amount_paid), 0)
-    const totalRepaid = sale.emi_covers.reduce(
+  const sales = (customer.sales as unknown as SaleWithPaymentsAndShop[]).map((sale) => {
+    const totalPaid = sale.payments.reduce((sum, a) => sum + toNumber(a.amount_paid), 0)
+    const totalRepaid = sale.payments.reduce(
       (sum, a) => sum + (a.amount_repaid ? toNumber(a.amount_repaid) : 0),
       0
     )
@@ -173,7 +173,7 @@ export default async function CustomerDetailPage(props: { params: Promise<{ id: 
                         <div className="flex-1">
                           {/* Force full width string on button inside dialog */}
                           <div className="[&>button]:w-full [&>button]">
-                            <AddEmiCoverDialog saleId={sale.id} shopId={activeShop.id} />
+                            <AddPaymentDialog saleId={sale.id} shopId={activeShop.id} />
                           </div>
                         </div>
                       )}

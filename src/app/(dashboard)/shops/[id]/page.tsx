@@ -37,12 +37,12 @@ export default async function ShopDetailPage(props: { params: Promise<{ id: stri
     notFound()
   }
 
-  const emi_covers = await prisma.emiCover.findMany({
+  const payments = await prisma.payment.findMany({
     where: { shop_id: shop.id },
     select: { amount_paid: true, amount_repaid: true },
   })
 
-  const outstanding = emi_covers.reduce((sum, a) => {
+  const outstanding = payments.reduce((sum, a) => {
     const paid = toNumber(a.amount_paid)
     const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
     return sum + (paid - repaid)
@@ -105,7 +105,7 @@ export default async function ShopDetailPage(props: { params: Promise<{ id: stri
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
               <TrendingUp className="size-4" />
-              Outstanding emi_covers
+              Outstanding payments
             </CardTitle>
           </CardHeader>
           <CardContent className={`text-2xl font-semibold ${outstanding > 0 ? 'text-red-600' : 'text-green-600'}`}>
@@ -120,7 +120,7 @@ export default async function ShopDetailPage(props: { params: Promise<{ id: stri
         </CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>
-            Sales and emi_covers in the app use the <span className="font-medium text-foreground">active shop</span> from the sidebar.
+            Sales and payments in the app use the <span className="font-medium text-foreground">active shop</span> from the sidebar.
             {isCurrentWorkspace ? ' This shop is active.' : ' Switch with the button above or the shop menu.'}
           </p>
           <Button asChild variant="outline" size="sm" className="shrink-0 self-start sm:self-auto">

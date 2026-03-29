@@ -30,13 +30,13 @@ export async function GET(request: Request) {
     })
     if (!sale) return NextResponse.json({ data: null, error: 'Sale not found' }, { status: 404 })
 
-    const emiCovers = await prisma.emiCover.findMany({
+    const payments = await prisma.payment.findMany({
       where: { sale_id: saleId },
       orderBy: { paid_date: 'desc' },
     })
-    return NextResponse.json({ data: emiCovers, error: null })
+    return NextResponse.json({ data: payments, error: null })
   } catch {
-    return NextResponse.json({ data: null, error: 'Failed to fetch EMI covers' }, { status: 500 })
+    return NextResponse.json({ data: null, error: 'Failed to fetch payments' }, { status: 500 })
   }
 }
 
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ data: null, error: 'shop_id does not match sale' }, { status: 400 })
     }
 
-    const emiCover = await prisma.emiCover.create({
+    const payment = await prisma.payment.create({
       data: {
         sale_id: body.sale_id,
         shop_id: body.shop_id,
@@ -66,8 +66,8 @@ export async function POST(request: Request) {
         note: body.note || null,
       },
     })
-    return NextResponse.json({ data: emiCover, error: null })
+    return NextResponse.json({ data: payment, error: null })
   } catch {
-    return NextResponse.json({ data: null, error: 'Failed to create EMI cover' }, { status: 500 })
+    return NextResponse.json({ data: null, error: 'Failed to create payment' }, { status: 500 })
   }
 }

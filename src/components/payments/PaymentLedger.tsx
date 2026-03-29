@@ -12,9 +12,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { EmiCoverForm, type EmiCoverFormValues } from '@/components/emi-covers/EmiCoverForm'
+import { PaymentForm, type PaymentFormValues } from '@/components/payments/PaymentForm'
 
-export type EmiCoverLedgerItem = {
+export type PaymentLedgerItem = {
   id: string
   paid_date: string | Date
   amount_paid: number | { toNumber: () => number }
@@ -27,27 +27,27 @@ function toNumber(value: number | { toNumber: () => number }) {
   return typeof value === 'number' ? value : value.toNumber()
 }
 
-export function EmiCoverLedger({
-  emi_covers,
+export function PaymentLedger({
+  payments,
 }: {
-  emi_covers: EmiCoverLedgerItem[]
+  payments: PaymentLedgerItem[]
 }) {
   const router = useRouter()
-  const [activeEmiCover, setActiveEmiCover] = useState<EmiCoverLedgerItem | null>(null)
+  const [activePayment, setActivePayment] = useState<PaymentLedgerItem | null>(null)
 
   const rows = useMemo(
     () =>
-      emi_covers.map((emiCover) => {
-        const paid = toNumber(emiCover.amount_paid)
-        const repaid = emiCover.amount_repaid ? toNumber(emiCover.amount_repaid) : 0
+      payments.map((payment) => {
+        const paid = toNumber(payment.amount_paid)
+        const repaid = payment.amount_repaid ? toNumber(payment.amount_repaid) : 0
         return {
-          ...emiCover,
+          ...payment,
           paid,
           repaid,
           balance: paid - repaid,
         }
       }),
-    [emi_covers]
+    [payments]
   )
 
   const totals = useMemo(() => {
@@ -56,14 +56,14 @@ export function EmiCoverLedger({
     return { totalPaid, totalRepaid, outstanding: totalPaid - totalRepaid }
   }, [rows])
 
-  async function saveRepayment(values: EmiCoverFormValues) {
-    if (!activeEmiCover) return
-    await fetch(`/api/emi-covers/${activeEmiCover.id}`, {
+  async function saveRepayment(values: PaymentFormValues) {
+    if (!activePayment) return
+    await fetch(`/api/payments/${activePayment.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(values),
     })
-    setActiveEmiCover(null)
+    setActivePayment(null)
     router.refresh()
   }
 
@@ -98,7 +98,7 @@ export function EmiCoverLedger({
                 <div className="text-right break-words">{row.note || '-'}</div>
               </div>
               <div className="flex justify-end pt-1">
-                <Button type="button" size="sm" variant="outline" onClick={() => setActiveEmiCover(row)}>
+                <Button type="button" size="sm" variant="outline" onClick={() => setActivePayment(row)}>
                   Mark Repayment
                 </Button>
               </div>
@@ -151,7 +151,7 @@ export function EmiCoverLedger({
                 </TableCell>
                 <TableCell>{row.note || '-'}</TableCell>
                 <TableCell>
-                  <Button type="button" size="sm" variant="outline" onClick={() => setActiveEmiCover(row)}>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setActivePayment(row)}>
                     Mark Repayment
                   </Button>
                 </TableCell>
@@ -173,13 +173,13 @@ export function EmiCoverLedger({
         </Table>
       </div>
 
-      <Dialog open={Boolean(activeEmiCover)} onOpenChange={(open) => (!open ? setActiveEmiCover(null) : undefined)}>
+      <Dialog open={Boolean(activePayment)} onOpenChange={(open) => (!open ? setActivePayment(null) : undefined)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Mark repayment</DialogTitle>
-            <DialogDescription>Update repayment details for this EMI cover.</DialogDescription>
+            <DialogDescription>Update repayment details for this payment.</DialogDescription>
           </DialogHeader>
-          {activeEmiCover ? <EmiCoverForm emiCover={activeEmiCover} onSubmit={saveRepayment} /> : null}
+          {activePayment ? <PaymentForm payment={activePayment} onSubmit={saveRepayment} /> : null}
         </DialogContent>
       </Dialog>
     </div>

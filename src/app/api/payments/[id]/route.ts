@@ -21,14 +21,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!tenantId) return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 })
 
     const { id } = await params
-    const existing = await prisma.emiCover.findFirst({
+    const existing = await prisma.payment.findFirst({
       where: { id, shop: { tenant_id: tenantId } },
       select: { id: true },
     })
-    if (!existing) return NextResponse.json({ data: null, error: 'EMI cover not found' }, { status: 404 })
+    if (!existing) return NextResponse.json({ data: null, error: 'Payment not found' }, { status: 404 })
 
     const body = await request.json()
-    const updated = await prisma.emiCover.update({
+    const updated = await prisma.payment.update({
       where: { id },
       data: {
         paid_date: body.paid_date ? new Date(body.paid_date) : undefined,
@@ -41,6 +41,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ data: updated, error: null })
   } catch {
-    return NextResponse.json({ data: null, error: 'Failed to update EMI cover' }, { status: 500 })
+    return NextResponse.json({ data: null, error: 'Failed to update payment' }, { status: 500 })
   }
 }

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
-export type EmiCoverFormValues = {
+export type PaymentFormValues = {
   paid_date?: string
   amount_paid?: number
   repaid_date?: string
@@ -14,18 +14,18 @@ export type EmiCoverFormValues = {
   note?: string
 }
 
-type EmiCoverLike = {
+type PaymentLike = {
   note?: string | null
 }
 
-export function EmiCoverForm({
-  emiCover,
+export function PaymentForm({
+  payment,
   mode = 'repayment',
   onSubmit,
 }: {
-  emiCover?: EmiCoverLike
+  payment?: PaymentLike
   mode?: 'create' | 'repayment'
-  onSubmit: (values: EmiCoverFormValues) => Promise<void> | void
+  onSubmit: (values: PaymentFormValues) => Promise<void> | void
 }) {
   const [paidDate, setPaidDate] = useState('')
   const [amountPaid, setAmountPaid] = useState('')
@@ -33,7 +33,7 @@ export function EmiCoverForm({
   const [repaidDate, setRepaidDate] = useState('')
   const [amountRepaid, setAmountRepaid] = useState('')
 
-  const [note, setNote] = useState(emiCover?.note || '')
+  const [note, setNote] = useState(payment?.note || '')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -100,7 +100,7 @@ export function EmiCoverForm({
         <Textarea id="note" value={note} onChange={(event) => setNote(event.target.value)} />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Saving...' : mode === 'create' ? 'Add EMI cover' : 'Save repayment'}
+        {loading ? 'Saving...' : mode === 'create' ? 'Add Payment' : 'Save repayment'}
       </Button>
     </form>
   )

@@ -21,30 +21,30 @@ type SaleForList = {
   emi_amount: unknown
   tenure_months: number
   loan_issue_date: Date
-  emi_covers: { amount_paid: unknown; amount_repaid: unknown | null }[]
+  payments: { amount_paid: unknown; amount_repaid: unknown | null }[]
 }
 
-export default async function SalesPage(props: { searchParams?: Promise<{ has_outstanding_emiCover?: string }> }) {
+export default async function SalesPage(props: { searchParams?: Promise<{ has_outstanding_payment?: string }> }) {
   const searchParams = await props.searchParams
   const { tenant, activeShop } = await getTenantShopsAndActiveShop()
 
   if (!tenant) return <main className="space-y-4">Unauthorized</main>
   if (!activeShop) return <main className="space-y-4">No active shop configured.</main>
 
-  const hasOutstanding = searchParams?.has_outstanding_emiCover === 'true'
+  const hasOutstanding = searchParams?.has_outstanding_payment === 'true'
 
   const sales = (await prisma.sale.findMany({
     where: { shop_id: activeShop.id },
     include: {
       customer: { select: { id: true, name: true, mobile1: true } },
-      emi_covers: { select: { amount_paid: true, amount_repaid: true } },
+      payments: { select: { amount_paid: true, amount_repaid: true } },
     },
     orderBy: { loan_issue_date: 'desc' },
   })) as unknown as SaleForList[]
 
   const rows: SaleRow[] = sales
     .map((sale) => {
-      const balance = sale.emi_covers.reduce((sum, a) => {
+      const balance = sale.payments.reduce((sum, a) => {
         const paid = toNumber(a.amount_paid)
         const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
         return sum + (paid - repaid)
@@ -73,7 +73,7 @@ export default async function SalesPage(props: { searchParams?: Promise<{ has_ou
             <Link href="/sales">All</Link>
           </Button>
           <Button asChild variant={hasOutstanding ? 'default' : 'outline'} size="sm">
-            <Link href="/sales?has_outstanding_emiCover=true">Has Outstanding EmiCover</Link>
+            <Link href="/sales?has_outstanding_payment=true">Has Outstanding Payment</Link>
           </Button>
         </div>
 

@@ -50,12 +50,12 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
       const sales = await prisma.sale.findMany({
         where: { customer_id: customer.id },
         select: {
-          emi_covers: { select: { amount_paid: true, amount_repaid: true } },
+          payments: { select: { amount_paid: true, amount_repaid: true } },
         },
       })
 
       const balance = sales.reduce((sum, sale) => {
-        const saleBalance = sale.emi_covers.reduce((s2, a) => {
+        const saleBalance = sale.payments.reduce((s2, a) => {
           const paid = toNumber(a.amount_paid)
           const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
           return s2 + (paid - repaid)

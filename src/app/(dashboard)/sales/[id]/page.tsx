@@ -4,8 +4,8 @@ import { getTenantShopsAndActiveShop } from '@/lib/server/dashboard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RiskBadge } from '@/components/customers/RiskBadge'
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
-import { AddEmiCoverDialog } from '@/components/emi-covers/AddEmiCoverDialog'
-import { EmiCoverLedger } from '@/components/emi-covers/EmiCoverLedger'
+import { AddPaymentDialog } from '@/components/payments/AddPaymentDialog'
+import { PaymentLedger } from '@/components/payments/PaymentLedger'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BackButton } from '@/components/shared/BackButton'
 
@@ -17,7 +17,7 @@ function toNumber(value: unknown) {
   return Number(value)
 }
 
-type EmiCoverForSaleMapping = {
+type PaymentForSaleMapping = {
   id: string
   paid_date: Date
   amount_paid: unknown
@@ -38,13 +38,13 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
       shop: true,
       customer: true,
       second_party_customer: true,
-      emi_covers: { orderBy: { paid_date: 'desc' } },
+      payments: { orderBy: { paid_date: 'desc' } },
     },
   })
 
   if (!sale) return <main className="space-y-4">Sale not found</main>
 
-  const emi_coversForUI = (sale.emi_covers as unknown as EmiCoverForSaleMapping[]).map((a) => ({
+  const paymentsForUI = (sale.payments as unknown as PaymentForSaleMapping[]).map((a) => ({
     ...a,
     amount_paid: toNumber(a.amount_paid),
     amount_repaid: a.amount_repaid ? toNumber(a.amount_repaid) : null,
@@ -52,9 +52,9 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
     repaid_date: a.repaid_date ? new Date(a.repaid_date).toISOString() : null,
   }))
 
-  const totalPaid = emi_coversForUI.reduce((sum, a) => sum + (a.amount_paid as number), 0)
-  const totalRepaid = emi_coversForUI.reduce((sum, a) => sum + ((a.amount_repaid as number | null) || 0), 0)
-  const emiCoverBalance = totalPaid - totalRepaid
+  const totalPaid = paymentsForUI.reduce((sum, a) => sum + (a.amount_paid as number), 0)
+  const totalRepaid = paymentsForUI.reduce((sum, a) => sum + ((a.amount_repaid as number | null) || 0), 0)
+  const paymentBalance = totalPaid - totalRepaid
 
   const secondPartyEnabled = Boolean(sale.is_second_party && sale.second_party_customer)
   const secondParty = sale.second_party_customer
@@ -85,7 +85,7 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
         </div>
 
         <div className="flex flex-col items-start gap-3 md:items-end">
-          <AddEmiCoverDialog saleId={sale.id} shopId={sale.shop_id} />
+          <AddPaymentDialog saleId={sale.id} shopId={sale.shop_id} />
         </div>
       </div>
 
@@ -114,13 +114,13 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
                   <TableCell className="py-2 font-medium">{toNumber(sale.emi_amount).toFixed(2)}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="py-2 pr-4 text-muted-foreground">EMI cover balance</TableCell>
+                  <TableCell className="py-2 pr-4 text-muted-foreground">Payment balance</TableCell>
                   <TableCell
                     className={`py-2 font-semibold ${
-                      emiCoverBalance > 0 ? 'text-red-600' : 'text-green-600'
+                      paymentBalance > 0 ? 'text-red-600' : 'text-green-600'
                     }`}
                   >
-                    {emiCoverBalance.toFixed(2)}
+                    {paymentBalance.toFixed(2)}
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -187,10 +187,10 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-muted-foreground">EMI cover ledger</CardTitle>
+          <CardTitle className="text-sm text-muted-foreground">Payment ledger</CardTitle>
         </CardHeader>
         <CardContent>
-          <EmiCoverLedger emi_covers={emi_coversForUI} />
+          <PaymentLedger payments={paymentsForUI} />
         </CardContent>
       </Card>
     </main>

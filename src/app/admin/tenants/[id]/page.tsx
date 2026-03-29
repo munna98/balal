@@ -74,12 +74,12 @@ export default async function AdminTenantDetailPage({
     },
   })
 
-  type EmiCoverForAdminTenant = {
+  type PaymentForAdminTenant = {
     amount_paid: unknown
     amount_repaid: unknown | null
   }
 
-  const emi_covers = (await prisma.emiCover.findMany({
+  const payments = (await prisma.payment.findMany({
     where: {
       shop: { tenant_id: tenant.id },
     },
@@ -87,11 +87,11 @@ export default async function AdminTenantDetailPage({
       amount_paid: true,
       amount_repaid: true,
     },
-  })) as unknown as EmiCoverForAdminTenant[]
+  })) as unknown as PaymentForAdminTenant[]
 
-  const totalOutstanding = emi_covers.reduce((sum, emiCover) => {
-    const paid = Number(emiCover.amount_paid)
-    const repaid = emiCover.amount_repaid ? Number(emiCover.amount_repaid) : 0
+  const totalOutstanding = payments.reduce((sum, payment) => {
+    const paid = Number(payment.amount_paid)
+    const repaid = payment.amount_repaid ? Number(payment.amount_repaid) : 0
     return sum + (paid - repaid)
   }, 0)
 
@@ -177,7 +177,7 @@ export default async function AdminTenantDetailPage({
         <CardContent className="grid gap-2 text-sm md:grid-cols-3">
           <p><span className="font-medium">Total customers:</span> {tenant._count.customers}</p>
           <p><span className="font-medium">Total sales:</span> {salesCount}</p>
-          <p><span className="font-medium">Total emi_covers outstanding:</span> {totalOutstanding.toFixed(2)}</p>
+          <p><span className="font-medium">Total payments outstanding:</span> {totalOutstanding.toFixed(2)}</p>
         </CardContent>
       </Card>
 

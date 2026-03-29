@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const emiCoverSchema = z.object({
+export const paymentSchema = z.object({
   sale_id:       z.string().uuid(),
   shop_id:       z.string().uuid(),
   paid_date:     z.coerce.date(),
@@ -10,4 +10,4 @@ export const emiCoverSchema = z.object({
   note:          z.string().optional(),
 })
 
-export type EmiCoverFormValues = z.infer<typeof emiCoverSchema>
+export type PaymentFormValues = z.infer<typeof paymentSchema>

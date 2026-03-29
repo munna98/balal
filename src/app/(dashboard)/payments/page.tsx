@@ -1,12 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { getTenantShopsAndActiveShop } from '@/lib/server/dashboard'
-import { EmiCoversDataTable, type EmiCoverRow } from './EmiCoversDataTable'
-import { EmiCoversFilters } from './EmiCoversFilters'
+import { PaymentsDataTable, type PaymentRow } from './PaymentsDataTable'
+import { PaymentsFilters } from './PaymentsFilters'
 import {
   parseAging,
   parseTab,
   type AgingFilter,
-} from './emi-covers-search-params'
+} from './payments-search-params'
 
 /** Calendar days from paid date through today (inclusive of both dates). */
 function ageDaysFromPaidDate(paid: Date) {
@@ -32,7 +32,7 @@ function toNumber(value: unknown) {
   return Number(value)
 }
 
-type EmiCoverWithSale = {
+type PaymentWithSale = {
   id: string
   note: string | null
   amount_paid: unknown
@@ -44,7 +44,7 @@ type EmiCoverWithSale = {
   }
 }
 
-export default async function EmiCoversPage(props: { searchParams?: Promise<{ tab?: string; aging?: string }> }) {
+export default async function PaymentsPage(props: { searchParams?: Promise<{ tab?: string; aging?: string }> }) {
   const searchParams = await props.searchParams
   const { tenant, activeShop } = await getTenantShopsAndActiveShop()
 
@@ -54,7 +54,7 @@ export default async function EmiCoversPage(props: { searchParams?: Promise<{ ta
   const tab = parseTab(searchParams?.tab)
   const aging = parseAging(searchParams?.aging)
 
-  const emi_covers = (await prisma.emiCover.findMany({
+  const payments = (await prisma.payment.findMany({
     where: { shop_id: activeShop.id },
     include: {
       sale: {
@@ -64,9 +64,9 @@ export default async function EmiCoversPage(props: { searchParams?: Promise<{ ta
       },
     },
     orderBy: { paid_date: 'desc' },
-  })) as unknown as EmiCoverWithSale[]
+  })) as unknown as PaymentWithSale[]
 
-  const rows: EmiCoverRow[] = emi_covers.map((adv) => {
+  const rows: PaymentRow[] = payments.map((adv) => {
     const paid = toNumber(adv.amount_paid)
     const repaid = adv.amount_repaid ? toNumber(adv.amount_repaid) : null
     const balance = paid - (repaid ?? 0)
@@ -95,9 +95,9 @@ export default async function EmiCoversPage(props: { searchParams?: Promise<{ ta
 
   return (
     <main className="space-y-4">
-      <EmiCoversFilters tab={tab} aging={aging} />
+      <PaymentsFilters tab={tab} aging={aging} />
 
-      <EmiCoversDataTable rows={filtered} />
+      <PaymentsDataTable rows={filtered} />
     </main>
   )
 }
