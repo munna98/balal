@@ -1,11 +1,16 @@
 'use client'
 
-import NextImage from 'next/image'
-import { useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Camera, Upload } from 'lucide-react'
+import ReactCrop, {
+  centerCrop,
+  makeAspectCrop,
+  type PercentCrop,
+  type PixelCrop,
+} from 'react-image-crop'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 
 function isMobileDevice() {
@@ -13,79 +18,33 @@ function isMobileDevice() {
   return /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
-}
-
-function getImageBounds(imageSize: { width: number; height: number }, zoom: number, cropSize: number) {
-  const scale = Math.max(cropSize / imageSize.width, cropSize / imageSize.height) * zoom
-  return {
-    width: imageSize.width * scale,
-    height: imageSize.height * scale,
-  }
-}
-
-function clampOffset(
-  offset: { x: number; y: number },
-  imageSize: { width: number; height: number },
-  zoom: number,
-  cropSize: number
-) {
-  const bounds = getImageBounds(imageSize, zoom, cropSize)
-  const minX = Math.min(0, cropSize - bounds.width)
-  const minY = Math.min(0, cropSize - bounds.height)
-
-  return {
-    x: clamp(offset.x, minX, 0),
-    y: clamp(offset.y, minY, 0),
-  }
-}
-
-async function loadImageSize(src: string) {
-  const image = new window.Image()
-  image.decoding = 'async'
-  image.src = src
-
-  await new Promise<void>((resolve, reject) => {
-    image.onload = () => resolve()
-    image.onerror = () => reject(new Error('Failed to load image'))
-  })
-
-  return {
-    width: image.naturalWidth,
-    height: image.naturalHeight,
-  }
+function centerAspectCrop(mediaWidth: number, mediaHeight: number, aspect: number) {
+  return centerCrop(
+    makeAspectCrop(
+      {
+        unit: '%',
+        width: 90,
+      },
+      aspect,
+      mediaWidth,
+      mediaHeight
+    ),
+    mediaWidth,
+    mediaHeight
+  )
 }
 
 async function cropImageToFile({
-  sourceUrl,
+  image,
+  crop,
   fileName,
-  imageSize,
-  zoom,
-  offset,
-  cropSize,
 }: {
-  sourceUrl: string
+  image: HTMLImageElement
+  crop: PixelCrop
   fileName: string
-  imageSize: { width: number; height: number }
-  zoom: number
-  offset: { x: number; y: number }
-  cropSize: number
 }) {
-  const image = new window.Image()
-  image.decoding = 'async'
-  image.src = sourceUrl
-
-  await new Promise<void>((resolve, reject) => {
-    image.onload = () => resolve()
-    image.onerror = () => reject(new Error('Failed to prepare image crop'))
-  })
-
-  const displayBounds = getImageBounds(imageSize, zoom, cropSize)
-  const sourceX = (-offset.x / displayBounds.width) * imageSize.width
-  const sourceY = (-offset.y / displayBounds.height) * imageSize.height
-  const sourceWidth = (cropSize / displayBounds.width) * imageSize.width
-  const sourceHeight = (cropSize / displayBounds.height) * imageSize.height
+  const scaleX = image.naturalWidth / image.width
+  const scaleY = image.naturalHeight / image.height
 
   const canvas = document.createElement('canvas')
   canvas.width = 600
@@ -98,7 +57,17 @@ async function cropImageToFile({
 
   context.imageSmoothingEnabled = true
   context.imageSmoothingQuality = 'high'
-  context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height)
+  context.drawImage(
+    image,
+    crop.x * scaleX,
+    crop.y * scaleY,
+    crop.width * scaleX,
+    crop.height * scaleY,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  )
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((value) => {
@@ -126,72 +95,62 @@ export function CustomerPhotoPicker({
 }) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
-  const dragStateRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null)
-  const cropSize = 280
+  const imageRef = useRef<HTMLImageElement | null>(null)
   const mobile = useMemo(() => isMobileDevice(), [])
 
   const [previewUrlOverride, setPreviewUrlOverride] = useState<string | null>(null)
   const [isCropOpen, setIsCropOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [sourceUrl, setSourceUrl] = useState('')
-  const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null)
-  const [zoom, setZoom] = useState(1)
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [crop, setCrop] = useState<PercentCrop>()
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
   const [error, setError] = useState<string | null>(null)
   const [isSavingCrop, setIsSavingCrop] = useState(false)
   const previewUrl = previewUrlOverride ?? initialUrl ?? ''
 
+  useEffect(() => {
+    return () => {
+      if (sourceUrl) URL.revokeObjectURL(sourceUrl)
+      if (previewUrlOverride?.startsWith('blob:')) URL.revokeObjectURL(previewUrlOverride)
+    }
+  }, [previewUrlOverride, sourceUrl])
+
+  function clearSourceUrl() {
+    if (sourceUrl) URL.revokeObjectURL(sourceUrl)
+    setSourceUrl('')
+  }
+
   async function handleFileSelection(file: File) {
     const objectUrl = URL.createObjectURL(file)
+    clearSourceUrl()
     setError(null)
     setSelectedFile(file)
     setSourceUrl(objectUrl)
-
-    try {
-      const nextImageSize = await loadImageSize(objectUrl)
-      const initialZoom = 1
-      const initialBounds = getImageBounds(nextImageSize, initialZoom, cropSize)
-      setImageSize(nextImageSize)
-      setZoom(initialZoom)
-      setOffset({
-        x: (cropSize - initialBounds.width) / 2,
-        y: (cropSize - initialBounds.height) / 2,
-      })
-      setIsCropOpen(true)
-    } catch (nextError) {
-      URL.revokeObjectURL(objectUrl)
-      setSourceUrl('')
-      setSelectedFile(null)
-      setImageSize(null)
-      setError(nextError instanceof Error ? nextError.message : 'Failed to load image')
-    }
+    setCrop(undefined)
+    setCompletedCrop(undefined)
+    setIsCropOpen(true)
   }
 
   function resetCropState() {
-    if (sourceUrl) URL.revokeObjectURL(sourceUrl)
-    dragStateRef.current = null
+    imageRef.current = null
+    clearSourceUrl()
     setIsCropOpen(false)
     setSelectedFile(null)
-    setSourceUrl('')
-    setImageSize(null)
-    setZoom(1)
-    setOffset({ x: 0, y: 0 })
+    setCrop(undefined)
+    setCompletedCrop(undefined)
     setIsSavingCrop(false)
   }
 
   async function handleCropSave() {
-    if (!selectedFile || !sourceUrl || !imageSize) return
+    if (!selectedFile || !completedCrop || !imageRef.current) return
     setIsSavingCrop(true)
     setError(null)
 
     try {
       const croppedFile = await cropImageToFile({
-        sourceUrl,
+        image: imageRef.current,
+        crop: completedCrop,
         fileName: selectedFile.name,
-        imageSize,
-        zoom,
-        offset,
-        cropSize,
       })
 
       const nextPreviewUrl = URL.createObjectURL(croppedFile)
@@ -214,36 +173,6 @@ export function CustomerPhotoPicker({
     }
 
     resetCropState()
-  }
-
-  function beginDrag(clientX: number, clientY: number) {
-    if (!imageSize) return
-    dragStateRef.current = {
-      startX: clientX,
-      startY: clientY,
-      originX: offset.x,
-      originY: offset.y,
-    }
-  }
-
-  function updateDrag(clientX: number, clientY: number) {
-    if (!dragStateRef.current || !imageSize) return
-
-    const nextOffset = clampOffset(
-      {
-        x: dragStateRef.current.originX + (clientX - dragStateRef.current.startX),
-        y: dragStateRef.current.originY + (clientY - dragStateRef.current.startY),
-      },
-      imageSize,
-      zoom,
-      cropSize
-    )
-
-    setOffset(nextOffset)
-  }
-
-  function endDrag() {
-    dragStateRef.current = null
   }
 
   return (
@@ -297,76 +226,40 @@ export function CustomerPhotoPicker({
         <DialogContent className="max-w-xl" showCloseButton={!isSavingCrop}>
           <DialogHeader>
             <DialogTitle>Crop customer photo</DialogTitle>
-            <DialogDescription>
-              Position the face inside the square frame so all customer photos stay uniform.
-            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <div
-                className="relative overflow-hidden rounded-2xl bg-muted touch-none select-none"
-                style={{ width: cropSize, height: cropSize }}
-                onPointerDown={(event) => {
-                  ;(event.currentTarget as HTMLDivElement).setPointerCapture(event.pointerId)
-                  beginDrag(event.clientX, event.clientY)
-                }}
-                onPointerMove={(event) => updateDrag(event.clientX, event.clientY)}
-                onPointerUp={(event) => {
-                  ;(event.currentTarget as HTMLDivElement).releasePointerCapture(event.pointerId)
-                  endDrag()
-                }}
-                onPointerCancel={(event) => {
-                  ;(event.currentTarget as HTMLDivElement).releasePointerCapture(event.pointerId)
-                  endDrag()
-                }}
+          <div className="flex justify-center">
+            {sourceUrl ? (
+              <ReactCrop
+                crop={crop}
+                aspect={1}
+                minWidth={120}
+                keepSelection
+                ruleOfThirds
+                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                onComplete={(pixelCrop) => setCompletedCrop(pixelCrop)}
+                className="max-h-[70vh] rounded-2xl bg-muted"
               >
-                {sourceUrl && imageSize ? (
-                  <NextImage
-                    src={sourceUrl}
-                    alt="Crop preview"
-                    unoptimized
-                    width={getImageBounds(imageSize, zoom, cropSize).width}
-                    height={getImageBounds(imageSize, zoom, cropSize).height}
-                    className="absolute max-w-none"
-                    style={{
-                      transform: `translate(${offset.x}px, ${offset.y}px)`,
-                    }}
-                  />
-                ) : null}
-                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/80" />
-                <div className="pointer-events-none absolute inset-0 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Zoom</span>
-                <span>{zoom.toFixed(1)}x</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="3"
-                step="0.1"
-                value={zoom}
-                className="w-full"
-                onChange={(event) => {
-                  if (!imageSize) return
-                  const nextZoom = Number(event.target.value)
-                  setZoom(nextZoom)
-                  setOffset((current) => clampOffset(current, imageSize, nextZoom, cropSize))
-                }}
-              />
-              <p className="text-xs text-muted-foreground">Drag the photo to adjust the crop.</p>
-            </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={imageRef}
+                  src={sourceUrl}
+                  alt="Crop preview"
+                  className="max-h-[70vh] w-auto object-contain"
+                  onLoad={(event) => {
+                    const { width, height } = event.currentTarget
+                    setCrop(centerAspectCrop(width, height, 1))
+                  }}
+                />
+              </ReactCrop>
+            ) : null}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleCropCancel(false)} disabled={isSavingCrop}>
               Cancel
             </Button>
-            <Button type="button" onClick={() => void handleCropSave()} disabled={isSavingCrop}>
+            <Button type="button" onClick={() => void handleCropSave()} disabled={isSavingCrop || !completedCrop}>
               {isSavingCrop ? 'Saving...' : 'Use cropped photo'}
             </Button>
           </DialogFooter>
