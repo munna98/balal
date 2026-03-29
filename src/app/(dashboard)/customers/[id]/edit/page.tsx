@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, use } from 'react'
+import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -8,16 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BackButton } from '@/components/shared/BackButton'
 import { RISK_LEVELS } from '@/lib/constants'
 import { useTenantFromDashboard } from '@/components/layout/active-shop-context'
+import { CustomerPhotoPicker } from '@/components/customers/CustomerPhotoPicker'
 import type { RiskLevelKey } from '@/types'
-
-function isMobileDevice() {
-  if (typeof navigator === 'undefined') return false
-  return /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)
-}
 
 export default function EditCustomerPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params)
@@ -43,9 +38,7 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const mobile = useMemo(() => isMobileDevice(), [])
   const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -80,16 +73,6 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
     }
     void load()
   }, [customerId])
-
-  useEffect(() => {
-    if (!photoFile) {
-      setPhotoPreviewUrl(null)
-      return
-    }
-    const url = URL.createObjectURL(photoFile)
-    setPhotoPreviewUrl(url)
-    return () => URL.revokeObjectURL(url)
-  }, [photoFile])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -172,28 +155,12 @@ export default function EditCustomerPage(props: { params: Promise<{ id: string }
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="flex flex-wrap items-start gap-4">
-              <div className="space-y-2">
-                <Avatar className="size-20">
-                  {photoPreviewUrl ? (
-                    <AvatarImage src={photoPreviewUrl} alt="Preview" />
-                  ) : existingPhotoUrl ? (
-                    <AvatarImage src={existingPhotoUrl} alt="Current photo" />
-                  ) : null}
-                  <AvatarFallback>{name.slice(0, 1)}</AvatarFallback>
-                </Avatar>
-              </div>
-
-              <div className="flex-1 space-y-2">
-                <Label>Update Photo</Label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  capture={mobile ? 'environment' : undefined}
-                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-                />
-              </div>
-            </div>
+            <CustomerPhotoPicker
+              label="Update photo"
+              initialUrl={existingPhotoUrl}
+              fallbackLabel={name || 'Photo'}
+              onChange={setPhotoFile}
+            />
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
