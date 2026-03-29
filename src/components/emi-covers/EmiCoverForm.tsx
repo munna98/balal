@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
-export type AdvanceFormValues = {
+export type EmiCoverFormValues = {
   paid_date?: string
   amount_paid?: number
   repaid_date?: string
@@ -14,18 +14,18 @@ export type AdvanceFormValues = {
   note?: string
 }
 
-type AdvanceLike = {
+type EmiCoverLike = {
   note?: string | null
 }
 
-export function AdvanceForm({
-  advance,
+export function EmiCoverForm({
+  emiCover,
   mode = 'repayment',
   onSubmit,
 }: {
-  advance?: AdvanceLike
+  emiCover?: EmiCoverLike
   mode?: 'create' | 'repayment'
-  onSubmit: (values: AdvanceFormValues) => Promise<void> | void
+  onSubmit: (values: EmiCoverFormValues) => Promise<void> | void
 }) {
   const [paidDate, setPaidDate] = useState('')
   const [amountPaid, setAmountPaid] = useState('')
@@ -33,7 +33,7 @@ export function AdvanceForm({
   const [repaidDate, setRepaidDate] = useState('')
   const [amountRepaid, setAmountRepaid] = useState('')
 
-  const [note, setNote] = useState(advance?.note || '')
+  const [note, setNote] = useState(emiCover?.note || '')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -100,7 +100,7 @@ export function AdvanceForm({
         <Textarea id="note" value={note} onChange={(event) => setNote(event.target.value)} />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Saving...' : mode === 'create' ? 'Add advance' : 'Save repayment'}
+        {loading ? 'Saving...' : mode === 'create' ? 'Add EMI cover' : 'Save repayment'}
       </Button>
     </form>
   )

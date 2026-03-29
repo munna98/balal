@@ -64,7 +64,7 @@ export type Sale = {
   created_at: Date
 }
 
-export type Advance = {
+export type EmiCover = {
   id: string
   shop_id: string
   sale_id: string
@@ -81,16 +81,16 @@ export type SubscriptionStatusKey = 'TRIAL' | 'ACTIVE' | 'SUSPENDED'
 
 export type ShopWithStats = Shop & {
   _count: { sales: number }
-  total_advance_balance: number
+  total_emi_cover_balance: number
 }
 
 export type CustomerWithSales = Customer & {
   sales: Sale[]
-  total_advance_balance: number
+  total_emi_cover_balance: number
 }
 
-export type SaleWithAdvances = Sale & {
-  advances: Advance[]
+export type SaleWithEmiCovers = Sale & {
+  emi_covers: EmiCover[]
   total_paid: number
   total_repaid: number
   balance: number

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const advanceSchema = z.object({
+export const emiCoverSchema = z.object({
   sale_id:       z.string().uuid(),
   shop_id:       z.string().uuid(),
   paid_date:     z.coerce.date(),
@@ -10,4 +10,4 @@ export const advanceSchema = z.object({
   note:          z.string().optional(),
 })
 
-export type AdvanceFormValues = z.infer<typeof advanceSchema>
+export type EmiCoverFormValues = z.infer<typeof emiCoverSchema>

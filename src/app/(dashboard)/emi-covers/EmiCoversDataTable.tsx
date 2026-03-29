@@ -2,9 +2,9 @@
 
 import { DataTable, type DataTableColumn } from '@/components/shared/DataTable'
 import { formatLocaleDate } from '@/lib/format-date'
-import { MarkRepaymentDialog } from '@/components/advances/MarkRepaymentDialog'
+import { MarkRepaymentDialog } from '@/components/emi-covers/MarkRepaymentDialog'
 
-export type AdvanceRow = {
+export type EmiCoverRow = {
   id: string
   customerName: string
   deviceName: string
@@ -17,8 +17,8 @@ export type AdvanceRow = {
   note: string | null
 }
 
-export function AdvancesDataTable({ rows }: { rows: AdvanceRow[] }) {
-  const columns: DataTableColumn<AdvanceRow>[] = [
+export function EmiCoversDataTable({ rows }: { rows: EmiCoverRow[] }) {
+  const columns: DataTableColumn<EmiCoverRow>[] = [
     { key: 'customerName', header: 'Customer', render: (row) => row.customerName },
     { key: 'deviceName', header: 'Device', render: (row) => row.deviceName },
     {
@@ -51,10 +51,10 @@ export function AdvancesDataTable({ rows }: { rows: AdvanceRow[] }) {
     {
       key: 'action',
       header: 'Action',
-      render: (row) => <MarkRepaymentDialog advance={{ id: row.id, note: row.note }} />,
+      render: (row) => <MarkRepaymentDialog emiCover={{ id: row.id, note: row.note }} />,
     },
   ]
 
-  return <DataTable columns={columns} data={rows} emptyMessage="No advances found." />
+  return <DataTable columns={columns} data={rows} emptyMessage="No EMI covers found." />
 }
 

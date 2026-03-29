@@ -53,7 +53,7 @@ model Shop {
 
   tenant   Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   sales    Sale[]
-  advances Advance[]
+  emi_covers EmiCover[]
 }
 
 model Customer {
@@ -110,10 +110,10 @@ model Sale {
   shop                  Shop      @relation(fields: [shop_id], references: [id], onDelete: Cascade)
   customer              Customer  @relation("PrimarySales", fields: [customer_id], references: [id])
   second_party_customer Customer? @relation("SecondPartySales", fields: [second_party_customer_id], references: [id])
-  advances              Advance[]
+  emi_covers              EmiCover[]
 }
 
-model Advance {
+model EmiCover {
   id      String @id @default(uuid())
   shop_id String
   sale_id String

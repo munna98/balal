@@ -10,16 +10,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { AdvanceForm, type AdvanceFormValues } from '@/components/advances/AdvanceForm'
+import { EmiCoverForm, type EmiCoverFormValues } from '@/components/emi-covers/EmiCoverForm'
 
-export function AddAdvanceDialog({ saleId, shopId }: { saleId: string; shopId: string }) {
+export function AddEmiCoverDialog({ saleId, shopId }: { saleId: string; shopId: string }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
 
-  async function addAdvance(values: AdvanceFormValues) {
+  async function addEmiCover(values: EmiCoverFormValues) {
     if (!values.paid_date || typeof values.amount_paid !== 'number') return
 
-    const res = await fetch('/api/advances', {
+    const res = await fetch('/api/emi-covers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -40,16 +40,16 @@ export function AddAdvanceDialog({ saleId, shopId }: { saleId: string; shopId: s
   return (
     <>
       <Button type="button" onClick={() => setOpen(true)} variant="outline" size="sm" className="w-full">
-        Add Advance
+        Add EMI Cover
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add advance</DialogTitle>
-            <DialogDescription>Record a new advance for this loan.</DialogDescription>
+            <DialogTitle>Add EMI cover</DialogTitle>
+            <DialogDescription>Record a new EMI cover for this loan.</DialogDescription>
           </DialogHeader>
-          <AdvanceForm mode="create" onSubmit={addAdvance} />
+          <EmiCoverForm mode="create" onSubmit={addEmiCover} />
         </DialogContent>
       </Dialog>
     </>

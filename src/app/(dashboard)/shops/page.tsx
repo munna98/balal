@@ -31,24 +31,24 @@ export default async function ShopsPage() {
   })
 
   const shopIds = shops.map((s) => s.id)
-  const advances =
+  const emi_covers =
     shopIds.length > 0
-      ? await prisma.advance.findMany({
+      ? await prisma.emiCover.findMany({
           where: { shop_id: { in: shopIds } },
           select: { shop_id: true, amount_paid: true, amount_repaid: true },
         })
       : []
 
-  const advanceBalanceByShop = new Map<string, number>()
-  for (const a of advances) {
+  const emiCoverBalanceByShop = new Map<string, number>()
+  for (const a of emi_covers) {
     const paid = toNumber(a.amount_paid)
     const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
     const delta = paid - repaid
-    advanceBalanceByShop.set(a.shop_id, (advanceBalanceByShop.get(a.shop_id) ?? 0) + delta)
+    emiCoverBalanceByShop.set(a.shop_id, (emiCoverBalanceByShop.get(a.shop_id) ?? 0) + delta)
   }
 
   const totalSales = shops.reduce((sum, s) => sum + s._count.sales, 0)
-  const totalOutstanding = shops.reduce((sum, s) => sum + (advanceBalanceByShop.get(s.id) ?? 0), 0)
+  const totalOutstanding = shops.reduce((sum, s) => sum + (emiCoverBalanceByShop.get(s.id) ?? 0), 0)
   const atShopLimit = shops.length >= tenant.shop_limit
   const slotsLeft = Math.max(0, tenant.shop_limit - shops.length)
 
@@ -102,7 +102,7 @@ export default async function ShopsPage() {
         </Card>
         <Card size="sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-normal text-muted-foreground">Outstanding advances</CardTitle>
+            <CardTitle className="text-xs font-normal text-muted-foreground">Outstanding EMI covers</CardTitle>
           </CardHeader>
           <CardContent className={`pt-0 text-2xl font-semibold ${totalOutstanding > 0 ? 'text-red-600' : 'text-green-600'}`}>
             {totalOutstanding.toFixed(2)}
@@ -119,7 +119,7 @@ export default async function ShopsPage() {
             <div className="max-w-sm space-y-1">
               <p className="font-medium">No shops yet</p>
               <p className="text-sm text-muted-foreground">
-                Create your first shop to record sales, customers, and advances for that location.
+                Create your first shop to record sales, customers, and EMI covers for that location.
               </p>
             </div>
             <Button asChild>
@@ -130,7 +130,7 @@ export default async function ShopsPage() {
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {shops.map((shop) => {
-            const outstanding = advanceBalanceByShop.get(shop.id) ?? 0
+            const outstanding = emiCoverBalanceByShop.get(shop.id) ?? 0
             const isCurrent = activeShop?.id === shop.id
 
             return (
@@ -191,7 +191,7 @@ export default async function ShopsPage() {
                     <div className="flex items-center gap-2">
                       <TrendingUp className="size-3.5 text-muted-foreground" />
                       <div>
-                        <p className="text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">Advance bal.</p>
+                        <p className="text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">EMI cover bal.</p>
                         <p className={`text-sm font-semibold ${outstanding > 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {outstanding.toFixed(2)}
                         </p>

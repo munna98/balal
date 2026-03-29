@@ -33,20 +33,20 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       include: {
         customer: true,
         second_party_customer: true,
-        advances: true,
+        emi_covers: true,
       },
     })
     if (!sale) return NextResponse.json({ data: null, error: 'Sale not found' }, { status: 404 })
 
-    type AdvanceForSaleApi = {
+    type EmiCoverForSaleApi = {
       amount_paid: { toNumber: () => number } | number
       amount_repaid: ({ toNumber: () => number } | number) | null
     }
 
-    const advances = sale.advances as unknown as AdvanceForSaleApi[]
+    const emi_covers = sale.emi_covers as unknown as EmiCoverForSaleApi[]
 
-    const totalPaid = advances.reduce((sum, a) => sum + toNumber(a.amount_paid), 0)
-    const totalRepaid = advances.reduce((sum, a) => sum + (a.amount_repaid ? toNumber(a.amount_repaid) : 0), 0)
+    const totalPaid = emi_covers.reduce((sum, a) => sum + toNumber(a.amount_paid), 0)
+    const totalRepaid = emi_covers.reduce((sum, a) => sum + (a.amount_repaid ? toNumber(a.amount_repaid) : 0), 0)
     const balance = totalPaid - totalRepaid
 
     return NextResponse.json({

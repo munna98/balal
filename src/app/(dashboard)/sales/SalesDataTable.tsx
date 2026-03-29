@@ -32,7 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { AdvanceForm, type AdvanceFormValues } from '@/components/advances/AdvanceForm'
+import { EmiCoverForm, type EmiCoverFormValues } from '@/components/emi-covers/EmiCoverForm'
 import { formatLocaleDate } from '@/lib/format-date'
 
 export type SaleRow = {
@@ -53,7 +53,7 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   
-  const [advanceOpen, setAdvanceOpen] = useState(false)
+  const [emiCoverOpen, setEmiCoverOpen] = useState(false)
 
   async function handleDelete() {
     setIsDeleting(true)
@@ -74,10 +74,10 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
     }
   }
 
-  async function handleAddAdvance(values: AdvanceFormValues) {
+  async function handleAddEmiCover(values: EmiCoverFormValues) {
     if (!values.paid_date || typeof values.amount_paid !== 'number') return
 
-    const res = await fetch('/api/advances', {
+    const res = await fetch('/api/emi-covers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -90,12 +90,12 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
     })
 
     if (!res.ok) {
-      toast.error('Failed to add advance')
+      toast.error('Failed to add EMI cover')
       return
     }
 
-    toast.success('Advance added successfully')
-    setAdvanceOpen(false)
+    toast.success('EMI cover added successfully')
+    setEmiCoverOpen(false)
     router.refresh()
   }
 
@@ -123,10 +123,10 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault()
-              setAdvanceOpen(true)
+              setEmiCoverOpen(true)
             }}
           >
-            <PlusCircle className="mr-2 size-4" /> Add Advance
+            <PlusCircle className="mr-2 size-4" /> Add EMI Cover
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -146,7 +146,7 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the sale for {sale.deviceName}. All related advances will also be deleted.
+              This will permanently delete the sale for {sale.deviceName}. All related EMI covers will also be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -165,13 +165,13 @@ function SaleActions({ sale, shopId }: { sale: SaleRow; shopId: string }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={advanceOpen} onOpenChange={setAdvanceOpen}>
+      <Dialog open={emiCoverOpen} onOpenChange={setEmiCoverOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add advance</DialogTitle>
-            <DialogDescription>Record a new advance for this loan.</DialogDescription>
+            <DialogTitle>Add EMI cover</DialogTitle>
+            <DialogDescription>Record a new EMI cover for this loan.</DialogDescription>
           </DialogHeader>
-          <AdvanceForm mode="create" onSubmit={handleAddAdvance} />
+          <EmiCoverForm mode="create" onSubmit={handleAddEmiCover} />
         </DialogContent>
       </Dialog>
     </>

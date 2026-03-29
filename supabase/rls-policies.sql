@@ -3,7 +3,7 @@ ALTER TABLE "Tenant"   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Shop"     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Customer" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Sale"     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Advance"  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "EmiCover"  ENABLE ROW LEVEL SECURITY;
 
 -- Helper: get current user's tenant id
 CREATE OR REPLACE FUNCTION get_tenant_id()
@@ -42,16 +42,16 @@ CREATE POLICY "sale_delete" ON "Sale" FOR DELETE USING (
   shop_id IN (SELECT id FROM "Shop" WHERE tenant_id = get_tenant_id())
 );
 
--- Advance
-CREATE POLICY "advance_select" ON "Advance" FOR SELECT USING (
+-- EmiCover
+CREATE POLICY "emiCover_select" ON "EmiCover" FOR SELECT USING (
   shop_id IN (SELECT id FROM "Shop" WHERE tenant_id = get_tenant_id())
 );
-CREATE POLICY "advance_insert" ON "Advance" FOR INSERT WITH CHECK (
+CREATE POLICY "emiCover_insert" ON "EmiCover" FOR INSERT WITH CHECK (
   shop_id IN (SELECT id FROM "Shop" WHERE tenant_id = get_tenant_id())
 );
-CREATE POLICY "advance_update" ON "Advance" FOR UPDATE USING (
+CREATE POLICY "emiCover_update" ON "EmiCover" FOR UPDATE USING (
   shop_id IN (SELECT id FROM "Shop" WHERE tenant_id = get_tenant_id())
 );
-CREATE POLICY "advance_delete" ON "Advance" FOR DELETE USING (
+CREATE POLICY "emiCover_delete" ON "EmiCover" FOR DELETE USING (
   shop_id IN (SELECT id FROM "Shop" WHERE tenant_id = get_tenant_id())
 );

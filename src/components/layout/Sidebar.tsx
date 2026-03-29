@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Customers', href: '/customers', icon: Users },
   { label: 'Sales', href: '/sales', icon: ShoppingCart },
-  { label: 'Advances', href: '/advances', icon: HandCoins },
+  { label: 'EMI Covers', href: '/emi-covers', icon: HandCoins },
   { label: 'Shops', href: '/shops', icon: Store },
 ]
 

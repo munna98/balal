@@ -61,7 +61,7 @@ function MockupCard() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Advance Balance</p>
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">EMI Cover Balance</p>
             <span className="text-xs font-bold text-emerald-600">+₹500</span>
           </div>
           <div className="flex gap-1.5">
@@ -111,7 +111,7 @@ export default function HeroSection() {
 
             <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed mb-8">
               Balal Finance helps mobile retailers track EMI sales, customer
-              history, and advance payments — all in one place.
+              history, and EMI cover payments — all in one place.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-4">

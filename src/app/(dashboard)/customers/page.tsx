@@ -23,7 +23,7 @@ export default async function CustomersPage() {
     where: { tenant_id: tenant.id },
     include: {
       _count: { select: { sales: true } },
-      sales: { include: { advances: true } },
+      sales: { include: { emi_covers: true } },
     },
     orderBy: { created_at: 'desc' },
   })) as unknown as Array<{
@@ -34,13 +34,13 @@ export default async function CustomersPage() {
     risk_level: CustomerRow['risk_level']
     _count: { sales: number }
     sales: Array<{
-      advances: Array<{ amount_paid: unknown; amount_repaid: unknown | null }>
+      emi_covers: Array<{ amount_paid: unknown; amount_repaid: unknown | null }>
     }>
   }>
 
   const rows: CustomerRow[] = customers.map((customer) => {
     const balance = customer.sales.reduce((sum, sale) => {
-      const saleBalance = sale.advances.reduce((s2, a) => {
+      const saleBalance = sale.emi_covers.reduce((s2, a) => {
         const paid = toNumber(a.amount_paid)
         const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
         return s2 + (paid - repaid)

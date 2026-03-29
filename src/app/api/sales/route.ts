@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const shopId = searchParams.get('shop_id')
-    const outstandingOnly = searchParams.get('outstanding_advance') === 'true'
+    const outstandingOnly = searchParams.get('outstanding_emiCover') === 'true'
 
     if (!shopId) {
       return NextResponse.json({ data: null, error: 'shop_id is required' }, { status: 400 })
@@ -39,35 +39,35 @@ export async function GET(request: Request) {
     if (!shop) return NextResponse.json({ data: null, error: 'Shop not found' }, { status: 404 })
 
     type SaleApiList = {
-      advances: Array<{
+      emi_covers: Array<{
         amount_paid: { toNumber: () => number } | number
         amount_repaid: ({ toNumber: () => number } | number) | null
       }>
       customer: { name: string }
-      advance_balance?: number
+      emiCover_balance?: number
     } & Record<string, unknown>
 
     const sales = (await prisma.sale.findMany({
       where: { shop_id: shopId },
       include: {
         customer: { select: { id: true, name: true } },
-        advances: true,
+        emi_covers: true,
       },
       orderBy: { created_at: 'desc' },
     })) as unknown as SaleApiList[]
 
     const mapped = sales
       .map((sale) => {
-        const totalPaid = sale.advances.reduce((sum, a) => sum + toNumber(a.amount_paid), 0)
-        const totalRepaid = sale.advances.reduce((sum, a) => sum + (a.amount_repaid ? toNumber(a.amount_repaid) : 0), 0)
-        const advanceBalance = totalPaid - totalRepaid
+        const totalPaid = sale.emi_covers.reduce((sum, a) => sum + toNumber(a.amount_paid), 0)
+        const totalRepaid = sale.emi_covers.reduce((sum, a) => sum + (a.amount_repaid ? toNumber(a.amount_repaid) : 0), 0)
+        const emiCoverBalance = totalPaid - totalRepaid
         return {
           ...sale,
           customer_name: sale.customer.name,
-          advance_balance: advanceBalance,
+          emiCover_balance: emiCoverBalance,
         }
       })
-      .filter((sale) => (outstandingOnly ? sale.advance_balance > 0 : true))
+      .filter((sale) => (outstandingOnly ? sale.emiCover_balance > 0 : true))
 
     return NextResponse.json({ data: mapped, error: null })
   } catch {

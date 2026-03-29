@@ -19,7 +19,7 @@ const testimonials = [
   },
   {
     quote:
-      "The advance tracker is exactly what I needed. I used to forget how much extra I paid for customers' EMIs and then struggle to collect. Now I just open the app and it's all there.",
+      "The EMI cover tracker is exactly what I needed. I used to forget how much extra I paid for customers' EMIs and then struggle to collect. Now I just open the app and it's all there.",
     name: 'Faisal Rahman K.',
     shop: 'City Mobile, Thrissur',
     initials: 'FR',

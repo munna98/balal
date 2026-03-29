@@ -16,7 +16,7 @@ function toNumber(value: unknown) {
 type SaleForTopCustomer = {
   customer_id: string
   customer: { id: string; name: string; mobile1: string }
-  advances: { amount_paid: unknown; amount_repaid: unknown | null }[]
+  emi_covers: { amount_paid: unknown; amount_repaid: unknown | null }[]
 }
 
 type LastSaleRow = {
@@ -53,11 +53,11 @@ export default async function DashboardPage() {
     },
   })
 
-  const shopAdvances = (await prisma.advance.findMany({
+  const shopEmiCovers = (await prisma.emiCover.findMany({
     where: { shop_id: activeShop.id },
     select: { amount_paid: true, amount_repaid: true },
   })) as unknown as Array<{ amount_paid: unknown; amount_repaid: unknown | null }>
-  const outstandingAdvanceBalance = shopAdvances.reduce((sum, a) => {
+  const outstandingEmiCoverBalance = shopEmiCovers.reduce((sum, a) => {
     const paid = toNumber(a.amount_paid)
     const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
     return sum + (paid - repaid)
@@ -75,7 +75,7 @@ export default async function DashboardPage() {
     select: {
       customer_id: true,
       customer: { select: { id: true, name: true, mobile1: true } },
-      advances: { select: { amount_paid: true, amount_repaid: true } },
+      emi_covers: { select: { amount_paid: true, amount_repaid: true } },
     },
   })) as unknown as SaleForTopCustomer[]
 
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
   >()
 
   for (const sale of salesForTopCustomers) {
-    const saleBalance = sale.advances.reduce((sum, a) => {
+    const saleBalance = sale.emi_covers.reduce((sum, a) => {
       const paid = toNumber(a.amount_paid)
       const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
       return sum + (paid - repaid)
@@ -127,10 +127,10 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Outstanding advance balance</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Outstanding EMI cover balance</CardTitle>
           </CardHeader>
-          <CardContent className={`text-2xl font-semibold ${outstandingAdvanceBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {outstandingAdvanceBalance.toFixed(2)}
+          <CardContent className={`text-2xl font-semibold ${outstandingEmiCoverBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {outstandingEmiCoverBalance.toFixed(2)}
           </CardContent>
         </Card>
 
@@ -242,7 +242,7 @@ export default async function DashboardPage() {
               ))
             ) : (
               <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                No outstanding advances yet.
+                No outstanding EMI covers yet.
               </div>
             )}
           </div>
@@ -270,7 +270,7 @@ export default async function DashboardPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground">
-                      No outstanding advances yet.
+                      No outstanding EMI covers yet.
                     </TableCell>
                   </TableRow>
                 )}
