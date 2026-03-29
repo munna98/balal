@@ -24,7 +24,7 @@ type SaleForList = {
   payments: { amount_paid: unknown; amount_repaid: unknown | null }[]
 }
 
-export default async function SalesPage(props: { searchParams?: Promise<{ has_outstanding_payment?: string }> }) {
+export default async function SalesPage(props: { searchParams: Promise<{ has_outstanding_payment?: string }> }) {
   const searchParams = await props.searchParams
   const { tenant, activeShop } = await getTenantShopsAndActiveShop()
 

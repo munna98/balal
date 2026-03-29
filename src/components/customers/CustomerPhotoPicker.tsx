@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import NextImage from 'next/image'
 import { useId, useMemo, useRef, useState } from 'react'
 import { Camera, Upload } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -42,7 +42,7 @@ function clampOffset(
 }
 
 async function loadImageSize(src: string) {
-  const image = new Image()
+  const image = new window.Image()
   image.decoding = 'async'
   image.src = src
 
@@ -72,7 +72,7 @@ async function cropImageToFile({
   offset: { x: number; y: number }
   cropSize: number
 }) {
-  const image = new Image()
+  const image = new window.Image()
   image.decoding = 'async'
   image.src = sourceUrl
 
@@ -196,7 +196,7 @@ export function CustomerPhotoPicker({
 
       const nextPreviewUrl = URL.createObjectURL(croppedFile)
       setPreviewUrlOverride((currentPreview) => {
-        if (currentPreview.startsWith('blob:')) URL.revokeObjectURL(currentPreview)
+        if (currentPreview?.startsWith('blob:')) URL.revokeObjectURL(currentPreview)
         return nextPreviewUrl
       })
       onChange(croppedFile)
@@ -322,7 +322,7 @@ export function CustomerPhotoPicker({
                 }}
               >
                 {sourceUrl && imageSize ? (
-                  <Image
+                  <NextImage
                     src={sourceUrl}
                     alt="Crop preview"
                     unoptimized

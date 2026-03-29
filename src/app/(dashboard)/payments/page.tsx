@@ -44,7 +44,7 @@ type PaymentWithSale = {
   }
 }
 
-export default async function PaymentsPage(props: { searchParams?: Promise<{ tab?: string; aging?: string }> }) {
+export default async function PaymentsPage(props: { searchParams: Promise<{ tab?: string; aging?: string }> }) {
   const searchParams = await props.searchParams
   const { tenant, activeShop } = await getTenantShopsAndActiveShop()
 
