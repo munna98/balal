@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { prisma } from '@/lib/prisma'
 import { TenantTable } from '@/components/admin/TenantTable'
 import { getOwnerEmailsBySupabaseIds } from '@/lib/server/tenant-owner-emails'
+import { connection } from 'next/server'
 
-export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
+  await connection() // new Date() used below — opt out of prerender
   type TenantAdminRow = {
     id: string
     name: string

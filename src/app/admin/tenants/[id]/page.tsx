@@ -2,6 +2,7 @@ import { format } from 'date-fns'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { connection } from 'next/server'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,13 +13,13 @@ import { TenantStatusEditor } from '@/components/admin/TenantStatusEditor'
 import { AdminNotesEditor } from '@/components/admin/AdminNotesEditor'
 import { TenantPlanShopLimitEditor } from '@/components/admin/TenantPlanShopLimitEditor'
 
-export const dynamic = 'force-dynamic'
 
 export default async function AdminTenantDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
+  await connection() // uncached Prisma data below — opt out of prerender
   const { id } = await params
 
   type TenantAdminShop = {

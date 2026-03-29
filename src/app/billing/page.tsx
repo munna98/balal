@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { connection } from 'next/server'
+import { Suspense } from 'react'
 import { APP_NAME, SUPPORT_WHATSAPP } from '@/lib/constants'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
@@ -12,7 +14,8 @@ function getDaysAgo(date: Date) {
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)))
 }
 
-export default async function BillingPage() {
+async function BillingContent() {
+  await connection() // new Date() used below — opt out of prerender
   const supabase = await createClient()
   const {
     data: { user },
@@ -68,5 +71,13 @@ export default async function BillingPage() {
         </CardContent>
       </Card>
     </main>
+  )
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense>
+      <BillingContent />
+    </Suspense>
   )
 }

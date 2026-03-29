@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 import { TrialBanner } from '@/components/shared/TrialBanner'
@@ -9,10 +10,11 @@ import type { Shop } from '@/types'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
+const ACTIVE_SHOP_COOKIE = 'balal_active_shop'
+
 function resolveActiveShop(shops: Shop[], cookieActiveShopId?: string) {
   if (!shops.length) return null
   if (!cookieActiveShopId) return shops[0] ?? null
-
   return shops.find((shop) => shop.id === cookieActiveShopId) ?? shops[0] ?? null
 }
 
@@ -22,7 +24,29 @@ function calculateTrialDaysLeft(trialEndsAt: Date | null) {
   return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
 }
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
+// ─── Shell skeleton shown while the async shell resolves ─────────────────────
+
+function DashboardShellSkeleton({ children }: { children: ReactNode }) {
+  // Render a static shell — no data needed — so the page loads instantly.
+  // children (the page) is already wrapped in its own loading.tsx Suspense.
+  return (
+    <div className="flex min-h-screen w-full">
+      <div className="hidden md:flex w-64 shrink-0" />
+      <div className="flex min-h-screen flex-1 flex-col">
+        <div className="px-4 pt-4">
+          <div className="h-10" />
+        </div>
+        <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-4 pb-24 md:pb-10">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Async inner shell — all uncached runtime data lives here ─────────────────
+
+async function DashboardShell({ children }: { children: ReactNode }) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -48,7 +72,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     : []
 
   const cookieStore = await cookies()
-  const ACTIVE_SHOP_COOKIE = 'balal_active_shop'
   const cookieActiveShopId = cookieStore.get(ACTIVE_SHOP_COOKIE)?.value
   const activeShop = resolveActiveShop(shops, cookieActiveShopId)
 
@@ -63,7 +86,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           <div className="px-4 pt-4">
             <TopBar />
           </div>
-
           <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-4 pb-24 md:pb-10">
             {showTrialBanner ? <TrialBanner daysLeft={daysLeft} /> : null}
             {children}
@@ -71,5 +93,15 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         </div>
       </div>
     </DashboardProvider>
+  )
+}
+
+// ─── Layout — thin static shell, async data inside Suspense ──────────────────
+
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<DashboardShellSkeleton>{children}</DashboardShellSkeleton>}>
+      <DashboardShell>{children}</DashboardShell>
+    </Suspense>
   )
 }
