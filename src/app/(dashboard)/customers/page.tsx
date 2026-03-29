@@ -25,7 +25,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
   const currentPage = Math.max(1, parseInt(params.page || '1', 10))
   const skip = (currentPage - 1) * PAGE_SIZE
 
-  // Optimized: Fetch just the summary data we need
+  // Fix N+1: fetch payments nested inside the single customer query
   const [customers, totalCount] = await Promise.all([
     prisma.customer.findMany({
       where: { tenant_id: tenant.id },
@@ -36,6 +36,11 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         mobile1: true,
         risk_level: true,
         _count: { select: { sales: true } },
+        sales: {
+          select: {
+            payments: { select: { amount_paid: true, amount_repaid: true } },
+          },
+        },
       },
       orderBy: { created_at: 'desc' },
       skip,
@@ -44,39 +49,30 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
     prisma.customer.count({ where: { tenant_id: tenant.id } }),
   ])
 
-  // For balance calculation, fetch only the minimal data needed
-  const customersWithBalance = await Promise.all(
-    customers.map(async (customer) => {
-      const sales = await prisma.sale.findMany({
-        where: { customer_id: customer.id },
-        select: {
-          payments: { select: { amount_paid: true, amount_repaid: true } },
-        },
-      })
+  // Compute balance inline — no extra DB round trips
+  const rows: CustomerRow[] = customers.map((customer) => {
+    const balance = customer.sales.reduce(
+      (sum, sale) =>
+        sum +
+        sale.payments.reduce((s, p) => {
+          const paid = toNumber(p.amount_paid)
+          const repaid = p.amount_repaid ? toNumber(p.amount_repaid) : 0
+          return s + (paid - repaid)
+        }, 0),
+      0,
+    )
 
-      const balance = sales.reduce((sum, sale) => {
-        const saleBalance = sale.payments.reduce((s2, a) => {
-          const paid = toNumber(a.amount_paid)
-          const repaid = a.amount_repaid ? toNumber(a.amount_repaid) : 0
-          return s2 + (paid - repaid)
-        }, 0)
-        return sum + saleBalance
-      }, 0)
-
-      return { ...customer, balance }
-    }),
-  )
-
-  const rows: CustomerRow[] = customersWithBalance.map((customer) => ({
-    id: customer.id,
-    name: customer.name,
-    photo_url: customer.photo_url,
-    mobile1: customer.mobile1,
-    risk_level: customer.risk_level,
-    salesCount: customer._count.sales,
-    balance: customer.balance,
-    search: `${customer.name} ${customer.mobile1}`,
-  }))
+    return {
+      id: customer.id,
+      name: customer.name,
+      photo_url: customer.photo_url,
+      mobile1: customer.mobile1,
+      risk_level: customer.risk_level,
+      salesCount: customer._count.sales,
+      balance,
+      search: `${customer.name} ${customer.mobile1}`,
+    }
+  })
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
