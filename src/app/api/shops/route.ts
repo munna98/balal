@@ -65,6 +65,7 @@ export async function POST(request: Request) {
         name,
         address: address || null,
         phone: phone || null,
+        is_active: true,
       },
     })
 

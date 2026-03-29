@@ -52,6 +52,7 @@ export async function POST(request: Request) {
         name: shopName,
         address: shopAddress || null,
         phone: shopPhone || null,
+        is_active: true,
       },
     })
 

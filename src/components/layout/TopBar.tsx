@@ -1,9 +1,11 @@
 "use client"
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useMemo } from 'react'
 import { useActiveShop } from '@/components/layout/active-shop-context'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
+import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/client'
 
 function titleFromPath(pathname: string) {
   const last = pathname.split('/').filter(Boolean).pop()
@@ -16,9 +18,17 @@ function titleFromPath(pathname: string) {
 
 export function TopBar() {
   const pathname = usePathname()
+  const router = useRouter()
   const activeShop = useActiveShop()
 
   const pageTitle = useMemo(() => titleFromPath(pathname), [pathname])
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+    router.refresh()
+  }
 
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -28,7 +38,17 @@ export function TopBar() {
           {activeShop ? activeShop.name : '-'}
         </p>
       </div>
-      <ThemeToggle />
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void handleSignOut()}
+        >
+          Sign out
+        </Button>
+      </div>
     </div>
   )
 }
