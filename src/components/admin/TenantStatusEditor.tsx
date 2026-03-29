@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 
 type Status = 'ACTIVE' | 'TRIAL' | 'SUSPENDED'
@@ -9,11 +10,17 @@ export function TenantStatusEditor({ tenantId }: { tenantId: string }) {
   const router = useRouter()
 
   async function updateStatus(status: Status) {
-    await fetch(`/api/admin/tenants/${tenantId}`, {
+    const res = await fetch(`/api/admin/tenants/${tenantId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subscription_status: status }),
     })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      toast.error((json as { error?: string }).error || 'Failed to update status')
+      return
+    }
+    toast.success('Subscription status updated')
     router.refresh()
   }
 

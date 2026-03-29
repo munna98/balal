@@ -1,8 +1,28 @@
-import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getTenantShopsAndActiveShop } from '@/lib/server/dashboard'
-import { Button } from '@/components/ui/button'
 import { AdvancesDataTable, type AdvanceRow } from './AdvancesDataTable'
+import { AdvancesFilters } from './AdvancesFilters'
+import {
+  parseAging,
+  parseTab,
+  type AgingFilter,
+} from './advances-search-params'
+
+/** Calendar days from paid date through today (inclusive of both dates). */
+function ageDaysFromPaidDate(paid: Date) {
+  const p = new Date(paid.getFullYear(), paid.getMonth(), paid.getDate())
+  const t = new Date()
+  const today = new Date(t.getFullYear(), t.getMonth(), t.getDate())
+  return Math.round((today.getTime() - p.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+function matchesAgingBucket(ageDays: number, aging: AgingFilter) {
+  if (aging === 'all') return true
+  if (aging === '0-30') return ageDays >= 0 && ageDays <= 30
+  if (aging === '30-60') return ageDays > 30 && ageDays <= 60
+  if (aging === '60-90') return ageDays > 60 && ageDays <= 90
+  return ageDays > 90
+}
 
 function toNumber(value: unknown) {
   if (typeof value === 'number') return value
@@ -24,14 +44,15 @@ type AdvanceWithSale = {
   }
 }
 
-export default async function AdvancesPage(props: { searchParams?: Promise<{ tab?: string }> }) {
+export default async function AdvancesPage(props: { searchParams?: Promise<{ tab?: string; aging?: string }> }) {
   const searchParams = await props.searchParams
   const { tenant, activeShop } = await getTenantShopsAndActiveShop()
 
   if (!tenant) return <main className="space-y-4">Unauthorized</main>
   if (!activeShop) return <main className="space-y-4">No active shop configured.</main>
 
-  const tab = searchParams?.tab === 'settled' ? 'settled' : 'outstanding'
+  const tab = parseTab(searchParams?.tab)
+  const aging = parseAging(searchParams?.aging)
 
   const advances = (await prisma.advance.findMany({
     where: { shop_id: activeShop.id },
@@ -49,12 +70,14 @@ export default async function AdvancesPage(props: { searchParams?: Promise<{ tab
     const paid = toNumber(adv.amount_paid)
     const repaid = adv.amount_repaid ? toNumber(adv.amount_repaid) : null
     const balance = paid - (repaid ?? 0)
+    const paidDate = new Date(adv.paid_date)
 
     return {
       id: adv.id,
       customerName: adv.sale.customer.name,
       deviceName: adv.sale.device_name,
-      paidDate: new Date(adv.paid_date).toISOString(),
+      paidDate: paidDate.toISOString(),
+      ageDays: ageDaysFromPaidDate(paidDate),
       paidByShop: paid,
       repaidAmount: repaid,
       balance,
@@ -62,20 +85,17 @@ export default async function AdvancesPage(props: { searchParams?: Promise<{ tab
     }
   })
 
-  const filtered = tab === 'settled' ? rows.filter((r) => r.balance <= 0) : rows.filter((r) => r.balance > 0)
+  const byTab =
+    tab === 'all'
+      ? rows
+      : tab === 'settled'
+        ? rows.filter((r) => r.balance <= 0)
+        : rows.filter((r) => r.balance > 0)
+  const filtered = byTab.filter((r) => matchesAgingBucket(r.ageDays, aging))
 
   return (
     <main className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button asChild size="sm" variant={tab === 'outstanding' ? 'default' : 'outline'}>
-            <Link href="/advances?tab=outstanding">Outstanding</Link>
-          </Button>
-          <Button asChild size="sm" variant={tab === 'settled' ? 'default' : 'outline'}>
-            <Link href="/advances?tab=settled">Settled</Link>
-          </Button>
-        </div>
-      </div>
+      <AdvancesFilters tab={tab} aging={aging} />
 
       <AdvancesDataTable rows={filtered} />
     </main>

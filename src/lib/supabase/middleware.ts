@@ -23,8 +23,10 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  const pathname = request.nextUrl.pathname
   const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
+  const isAdminRoute = pathname.startsWith('/admin') || pathname.startsWith('/api/admin')
+  const isApiRoute = pathname.startsWith('/api')
   const isOnboarding = request.nextUrl.pathname.startsWith('/onboarding')
   const isBillingRoute = request.nextUrl.pathname.startsWith('/billing')
   const isPublic = request.nextUrl.pathname === '/'
@@ -43,7 +45,13 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirect admin to /admin if they are on dashboard, onboarding or home
-  if (user?.email === process.env.ADMIN_EMAIL && !isAdminRoute && !isAuthRoute && !isBillingRoute) {
+  if (
+    user?.email === process.env.ADMIN_EMAIL &&
+    !isAdminRoute &&
+    !isAuthRoute &&
+    !isBillingRoute &&
+    !isApiRoute
+  ) {
     const url = request.nextUrl.clone()
     url.pathname = '/admin'
     return NextResponse.redirect(url)

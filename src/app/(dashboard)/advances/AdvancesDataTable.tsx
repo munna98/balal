@@ -1,6 +1,7 @@
 'use client'
 
 import { DataTable, type DataTableColumn } from '@/components/shared/DataTable'
+import { formatLocaleDate } from '@/lib/format-date'
 import { MarkRepaymentDialog } from '@/components/advances/MarkRepaymentDialog'
 
 export type AdvanceRow = {
@@ -8,6 +9,8 @@ export type AdvanceRow = {
   customerName: string
   deviceName: string
   paidDate: string // ISO
+  /** Whole calendar days from paid date to today (local calendar dates). */
+  ageDays: number
   paidByShop: number
   repaidAmount: number | null
   balance: number
@@ -21,7 +24,12 @@ export function AdvancesDataTable({ rows }: { rows: AdvanceRow[] }) {
     {
       key: 'paidDate',
       header: 'Date',
-      render: (row) => new Date(row.paidDate).toLocaleDateString(),
+      render: (row) => formatLocaleDate(row.paidDate),
+    },
+    {
+      key: 'ageDays',
+      header: 'Age (days)',
+      render: (row) => row.ageDays.toString(),
     },
     {
       key: 'paidByShop',

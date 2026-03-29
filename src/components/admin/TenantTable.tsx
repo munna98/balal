@@ -8,18 +8,21 @@ import { SUBSCRIPTION_STATUS_LABELS } from '@/lib/constants'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 import { DataTable, type DataTableColumn } from '@/components/shared/DataTable'
 
 type TenantRow = {
   id: string
   name: string
-  email: string
+  supabase_user_id: string
+  email: string | null
   phone: string | null
   subscription_status: 'TRIAL' | 'ACTIVE' | 'SUSPENDED'
   trial_ends_at: Date | null
   subscribed_at: Date | null
   created_at: Date
   shop_count: number
+  customer_count: number
 }
 
 type FilterValue = 'ALL' | 'TRIAL' | 'ACTIVE' | 'SUSPENDED'
@@ -35,11 +38,17 @@ export function TenantTable({ tenants }: { tenants: TenantRow[] }) {
 
   async function toggleStatus(tenant: TenantRow) {
     const next = tenant.subscription_status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED'
-    await fetch(`/api/admin/tenants/${tenant.id}`, {
+    const res = await fetch(`/api/admin/tenants/${tenant.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subscription_status: next }),
     })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      toast.error((json as { error?: string }).error || 'Failed to update status')
+      return
+    }
+    toast.success(next === 'SUSPENDED' ? 'Tenant suspended' : 'Tenant activated')
     router.refresh()
   }
 
@@ -56,7 +65,11 @@ export function TenantTable({ tenants }: { tenants: TenantRow[] }) {
     {
       key: 'email',
       header: 'Email',
-      render: (tenant) => tenant.email,
+      render: (tenant) => (
+        <span className="max-w-[220px] truncate font-mono text-xs" title={tenant.supabase_user_id}>
+          {tenant.email ?? '—'}
+        </span>
+      ),
     },
     {
       key: 'phone',
@@ -77,8 +90,13 @@ export function TenantTable({ tenants }: { tenants: TenantRow[] }) {
     },
     {
       key: 'shop_count',
-      header: 'Shop count',
+      header: 'Shops',
       render: (tenant) => tenant.shop_count,
+    },
+    {
+      key: 'customer_count',
+      header: 'Customers',
+      render: (tenant) => tenant.customer_count,
     },
     {
       key: 'subscription_status',

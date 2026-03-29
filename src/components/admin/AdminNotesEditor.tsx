@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Textarea } from '@/components/ui/textarea'
 
 export function AdminNotesEditor({
@@ -15,11 +16,16 @@ export function AdminNotesEditor({
   const router = useRouter()
 
   async function saveNotes() {
-    await fetch(`/api/admin/tenants/${tenantId}`, {
+    const res = await fetch(`/api/admin/tenants/${tenantId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ admin_notes: value }),
     })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      toast.error((json as { error?: string }).error || 'Failed to save notes')
+      return
+    }
     router.refresh()
   }
 

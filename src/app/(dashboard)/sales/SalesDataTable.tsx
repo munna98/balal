@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { AdvanceForm, type AdvanceFormValues } from '@/components/advances/AdvanceForm'
+import { formatLocaleDate } from '@/lib/format-date'
 
 export type SaleRow = {
   id: string
@@ -209,7 +210,7 @@ export function SalesDataTable({ rows, shopId }: { rows: SaleRow[]; shopId: stri
     {
       key: 'date',
       header: 'Date',
-      render: (row) => new Date(row.loanIssueDate).toLocaleDateString(),
+      render: (row) => formatLocaleDate(row.loanIssueDate),
     },
     {
       key: 'balance',

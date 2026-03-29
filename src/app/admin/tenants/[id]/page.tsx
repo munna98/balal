@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { Badge } from '@/components/ui/badge'
@@ -6,8 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SUBSCRIPTION_STATUS_LABELS } from '@/lib/constants'
 import { prisma } from '@/lib/prisma'
+import { getOwnerEmailsBySupabaseIds } from '@/lib/server/tenant-owner-emails'
 import { TenantStatusEditor } from '@/components/admin/TenantStatusEditor'
 import { AdminNotesEditor } from '@/components/admin/AdminNotesEditor'
+import { TenantPlanShopLimitEditor } from '@/components/admin/TenantPlanShopLimitEditor'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AdminTenantDetailPage({
   params,
@@ -28,6 +33,8 @@ export default async function AdminTenantDetailPage({
     name: string
     supabase_user_id: string
     phone: string | null
+    plan: 'BASIC' | 'PREMIUM'
+    shop_limit: number
     subscription_status: 'TRIAL' | 'ACTIVE' | 'SUSPENDED'
     trial_ends_at: Date | null
     subscribed_at: Date | null
@@ -57,6 +64,9 @@ export default async function AdminTenantDetailPage({
   })) as unknown as TenantAdminDetail
 
   if (!tenant) notFound()
+
+  const ownerEmailMap = await getOwnerEmailsBySupabaseIds([tenant.supabase_user_id])
+  const ownerEmail = ownerEmailMap.get(tenant.supabase_user_id) ?? null
 
   const salesCount = await prisma.sale.count({
     where: {
@@ -104,6 +114,11 @@ export default async function AdminTenantDetailPage({
 
   return (
     <main className="space-y-6 p-4 md:p-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="ghost" size="sm" asChild className="-ml-2 h-8 px-2">
+          <Link href="/admin">← All tenants</Link>
+        </Button>
+      </div>
       <h1 className="text-2xl font-semibold">Tenant detail</h1>
 
       <Card>
@@ -112,11 +127,23 @@ export default async function AdminTenantDetailPage({
         </CardHeader>
         <CardContent className="grid gap-2 text-sm">
           <p><span className="font-medium">Name:</span> {tenant.name}</p>
-          <p><span className="font-medium">Email:</span> {tenant.supabase_user_id}</p>
+          <p>
+            <span className="font-medium">Email:</span>{' '}
+            {ownerEmail ?? '—'}
+          </p>
+          <p className="text-muted-foreground text-xs font-mono break-all">
+            Auth user ID: {tenant.supabase_user_id}
+          </p>
           <p><span className="font-medium">Phone:</span> {tenant.phone || '-'}</p>
           <p><span className="font-medium">Signup date:</span> {format(tenant.created_at, 'dd MMM yyyy, hh:mm a')}</p>
         </CardContent>
       </Card>
+
+      <TenantPlanShopLimitEditor
+        tenantId={tenant.id}
+        plan={tenant.plan}
+        shopLimit={tenant.shop_limit}
+      />
 
       <Card>
         <CardHeader>

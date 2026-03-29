@@ -2,6 +2,9 @@ import { startOfMonth } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { prisma } from '@/lib/prisma'
 import { TenantTable } from '@/components/admin/TenantTable'
+import { getOwnerEmailsBySupabaseIds } from '@/lib/server/tenant-owner-emails'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
   type TenantAdminRow = {
@@ -28,6 +31,8 @@ export default async function AdminPage() {
     },
   })) as unknown as TenantAdminRow[]
 
+  const emailByUserId = await getOwnerEmailsBySupabaseIds(tenants.map((t) => t.supabase_user_id))
+
   const thisMonthStart = startOfMonth(new Date())
 
   const summary = {
@@ -41,13 +46,15 @@ export default async function AdminPage() {
   const rows = tenants.map((tenant) => ({
     id: tenant.id,
     name: tenant.name,
-    email: tenant.supabase_user_id,
+    supabase_user_id: tenant.supabase_user_id,
+    email: emailByUserId.get(tenant.supabase_user_id) ?? null,
     phone: tenant.phone,
     subscription_status: tenant.subscription_status,
     trial_ends_at: tenant.trial_ends_at,
     subscribed_at: tenant.subscribed_at,
     created_at: tenant.created_at,
     shop_count: tenant._count.shops,
+    customer_count: tenant._count.customers,
   }))
 
   return (
