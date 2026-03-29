@@ -5,9 +5,16 @@ import { TrialBanner } from '@/components/shared/TrialBanner'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
 import { DashboardProvider } from '@/components/layout/active-shop-context'
-import type { Tenant, Shop } from '@/types'
+import type { Shop } from '@/types'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+
+function resolveActiveShop(shops: Shop[], cookieActiveShopId?: string) {
+  if (!shops.length) return null
+  if (!cookieActiveShopId) return shops[0] ?? null
+
+  return shops.find((shop) => shop.id === cookieActiveShopId) ?? shops[0] ?? null
+}
 
 function calculateTrialDaysLeft(trialEndsAt: Date | null) {
   if (!trialEndsAt) return 0
@@ -43,7 +50,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const cookieStore = await cookies()
   const ACTIVE_SHOP_COOKIE = 'balal_active_shop'
   const cookieActiveShopId = cookieStore.get(ACTIVE_SHOP_COOKIE)?.value
-  const activeShop = cookieActiveShopId ? shops.find((s) => s.id === cookieActiveShopId) || null : shops[0] || null
+  const activeShop = resolveActiveShop(shops, cookieActiveShopId)
 
   const daysLeft = tenant ? calculateTrialDaysLeft(tenant.trial_ends_at) : 0
   const showTrialBanner = tenant?.subscription_status === 'TRIAL'

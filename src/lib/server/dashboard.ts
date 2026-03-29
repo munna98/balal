@@ -5,6 +5,13 @@ import type { Shop, Tenant } from '@/types'
 
 const ACTIVE_SHOP_COOKIE = 'balal_active_shop'
 
+function resolveActiveShop(shops: Shop[], cookieActiveShopId?: string) {
+  if (!shops.length) return null
+  if (!cookieActiveShopId) return shops[0] ?? null
+
+  return shops.find((shop) => shop.id === cookieActiveShopId) ?? shops[0] ?? null
+}
+
 export async function getTenantShopsAndActiveShop(): Promise<{
   tenant: Tenant | null
   shops: Shop[]
@@ -30,7 +37,7 @@ export async function getTenantShopsAndActiveShop(): Promise<{
 
   const cookieStore = await cookies()
   const cookieActiveShopId = cookieStore.get(ACTIVE_SHOP_COOKIE)?.value
-  const activeShop = cookieActiveShopId ? shops.find((s) => s.id === cookieActiveShopId) || null : shops[0] || null
+  const activeShop = resolveActiveShop(shops, cookieActiveShopId)
 
   return { tenant, shops, activeShop }
 }
