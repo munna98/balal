@@ -308,29 +308,31 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
                       <Label htmlFor="device-name">Device name</Label>
                       <Input id="device-name" value={deviceName} onChange={(e) => setDeviceName(e.target.value)} required />
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="device-amount">Device amount</Label>
-                      <Input
-                        id="device-amount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={deviceAmount}
-                        onChange={(e) => setDeviceAmount(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="accessories-amount">Accessories amount</Label>
-                      <Input
-                        id="accessories-amount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={accessoriesAmount}
-                        onChange={(e) => setAccessoriesAmount(e.target.value)}
-                        required
-                      />
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="device-amount">Device amount</Label>
+                        <Input
+                          id="device-amount"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={deviceAmount}
+                          onChange={(e) => setDeviceAmount(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="accessories-amount">Accessories amount</Label>
+                        <Input
+                          id="accessories-amount"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={accessoriesAmount}
+                          onChange={(e) => setAccessoriesAmount(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <ImeiScanner value={imei} onChange={setImei} />
