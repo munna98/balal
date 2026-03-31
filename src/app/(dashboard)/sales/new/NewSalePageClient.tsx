@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { CustomerForm, type CustomerFormSubmit } from '@/components/customers/CustomerForm'
 import { ImeiScanner } from '@/components/sales/ImeiScanner'
@@ -16,6 +15,7 @@ import { SecondPartySelector } from '@/components/sales/SecondPartySelector'
 import { useActiveShop, useTenantFromDashboard } from '@/components/layout/active-shop-context'
 import { BackButton } from '@/components/shared/BackButton'
 import { CustomerLookupField, type CustomerLookupItem } from '@/components/customers/CustomerLookupField'
+import { ResponsiveSheetDrawer } from '@/components/shared/ResponsiveSheetDrawer'
 
 export default function NewSalePageClient({ customers }: { customers: CustomerLookupItem[] }) {
   const router = useRouter()
@@ -404,17 +404,14 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
         </CardContent>
       </Card>
 
-      <Sheet open={customerSheetOpen} onOpenChange={setCustomerSheetOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Create new customer</SheetTitle>
-            <SheetDescription>Customer will be auto-selected after creation.</SheetDescription>
-          </SheetHeader>
-          <div className="p-6 pt-0">
-            <CustomerForm onSubmit={createCustomer} submitLabel="Create and select customer" />
-          </div>
-        </SheetContent>
-      </Sheet>
+      <ResponsiveSheetDrawer
+        open={customerSheetOpen}
+        onOpenChange={setCustomerSheetOpen}
+        title="Create new customer"
+        description="Customer will be auto-selected after creation."
+      >
+        <CustomerForm onSubmit={createCustomer} submitLabel="Create and select customer" />
+      </ResponsiveSheetDrawer>
     </main>
   )
 }
