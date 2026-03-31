@@ -35,14 +35,14 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
     const dd = String(d.getDate()).padStart(2, '0')
     return `${yyyy}-${mm}-${dd}`
   })
-  const [downPayment, setDownPayment] = useState<string>('0')
+  const [downPayment, setDownPayment] = useState<string>('')
   const [loanAmount, setLoanAmount] = useState<string>('')
-  const [tenureMonths, setTenureMonths] = useState<string>('12')
+  const [tenureMonths, setTenureMonths] = useState<string>('')
   const [emiAmount, setEmiAmount] = useState<string>('')
 
   const [deviceName, setDeviceName] = useState('')
   const [deviceAmount, setDeviceAmount] = useState<string>('')
-  const [accessoriesAmount, setAccessoriesAmount] = useState<string>('0')
+  const [accessoriesAmount, setAccessoriesAmount] = useState<string>('')
   const [imei, setImei] = useState('')
   const [referenceNumber, setReferenceNumber] = useState('')
 
@@ -60,6 +60,9 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
       setSecondPartyCustomer(null)
     }
   }, [secondPartyCustomer, selectedCustomer])
+
+  const financeTotal = (Number(downPayment) || 0) + (Number(loanAmount) || 0)
+  const productTotal = (Number(deviceAmount) || 0) + (Number(accessoriesAmount) || 0)
 
   function rememberCustomer(customer: CustomerLookupItem) {
     setLookupCustomers((prev) => (prev.some((item) => item.id === customer.id) ? prev : [customer, ...prev]))
@@ -245,28 +248,31 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
                       <Label htmlFor="loan-issue-date">Loan date</Label>
                       <Input id="loan-issue-date" type="date" value={loanIssueDate} onChange={(e) => setLoanIssueDate(e.target.value)} />
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="down-payment">Down payment</Label>
-                      <Input
-                        id="down-payment"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={downPayment}
-                        onChange={(e) => setDownPayment(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="loan-amount">Loan amount</Label>
-                      <Input
-                        id="loan-amount"
-                        type="number"
-                        min="1"
-                        step="0.01"
-                        value={loanAmount}
-                        onChange={(e) => setLoanAmount(e.target.value)}
-                        required
-                      />
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="down-payment">Down payment</Label>
+                        <Input
+                          id="down-payment"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={downPayment}
+                          onChange={(e) => setDownPayment(e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="loan-amount">Loan amount</Label>
+                        <Input
+                          id="loan-amount"
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          value={loanAmount}
+                          onChange={(e) => setLoanAmount(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="tenure">Tenure (months)</Label>
@@ -278,6 +284,7 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
                         step="1"
                         value={tenureMonths}
                         onChange={(e) => setTenureMonths(e.target.value)}
+                        placeholder="Enter months"
                         required
                       />
                       <p className="text-xs text-muted-foreground">Tenure must be between 1 and 24 months.</p>
@@ -293,6 +300,12 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
                         onChange={(e) => setEmiAmount(e.target.value)}
                         required
                       />
+                    </div>
+                    <div className="rounded-md border bg-muted/40 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span className="text-muted-foreground">Finance total</span>
+                        <span className="font-medium">{financeTotal.toFixed(2)}</span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -330,8 +343,14 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
                           step="0.01"
                           value={accessoriesAmount}
                           onChange={(e) => setAccessoriesAmount(e.target.value)}
-                          required
+                          placeholder="0"
                         />
+                      </div>
+                    </div>
+                    <div className="rounded-md border bg-muted/40 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span className="text-muted-foreground">Product total</span>
+                        <span className="font-medium">{productTotal.toFixed(2)}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
