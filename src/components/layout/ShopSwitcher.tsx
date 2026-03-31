@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useActiveShop } from '@/components/layout/active-shop-context'
 
 type ShopItem = {
   id: string
@@ -23,20 +24,24 @@ function writeCookie(name: string, value: string) {
 
 export function ShopSwitcher({ shops }: { shops: ShopItem[] }) {
   const router = useRouter()
+  const activeShop = useActiveShop()
   const [isPending, startTransition] = useTransition()
   const defaultValue = useMemo(() => {
     const fromCookie = readCookie(ACTIVE_SHOP_COOKIE)
     if (fromCookie && shops.some((shop) => shop.id === fromCookie)) return fromCookie
     return shops[0]?.id || ''
   }, [shops])
+  const [selectedValue, setSelectedValue] = useState(activeShop?.id ?? defaultValue)
+  const currentValue = isPending ? selectedValue : activeShop?.id ?? defaultValue
 
   if (!shops.length) return null
 
   return (
     <Select
-      defaultValue={defaultValue}
+      value={currentValue}
       disabled={isPending}
       onValueChange={(value) => {
+        setSelectedValue(value)
         writeCookie(ACTIVE_SHOP_COOKIE, value)
         startTransition(() => {
           router.refresh()
