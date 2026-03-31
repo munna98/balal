@@ -274,6 +274,12 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
                         />
                       </div>
                     </div>
+                    <div className="rounded-md border bg-muted/40 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span className="text-muted-foreground">Total</span>
+                        <span className="font-medium">{financeTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="tenure">Tenure (months)</Label>
                       <Input
@@ -300,12 +306,6 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
                         onChange={(e) => setEmiAmount(e.target.value)}
                         required
                       />
-                    </div>
-                    <div className="rounded-md border bg-muted/40 px-3 py-2">
-                      <div className="flex items-center justify-between gap-3 text-sm">
-                        <span className="text-muted-foreground">Finance total</span>
-                        <span className="font-medium">{financeTotal.toFixed(2)}</span>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -349,7 +349,7 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
                     </div>
                     <div className="rounded-md border bg-muted/40 px-3 py-2">
                       <div className="flex items-center justify-between gap-3 text-sm">
-                        <span className="text-muted-foreground">Product total</span>
+                        <span className="text-muted-foreground">Total</span>
                         <span className="font-medium">{productTotal.toFixed(2)}</span>
                       </div>
                     </div>
