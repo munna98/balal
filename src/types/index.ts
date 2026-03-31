@@ -54,6 +54,8 @@ export type Sale = {
   tenure_months: number
   emi_amount: Decimal
   device_name: string
+  device_amount: Decimal
+  accessories_amount: Decimal
   imei: string | null
   reference_number: string | null
   co_name: string | null

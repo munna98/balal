@@ -98,6 +98,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         tenure_months: body.tenure_months,
         emi_amount: body.emi_amount,
         device_name: body.device_name,
+        device_amount: body.device_amount,
+        accessories_amount: body.accessories_amount,
         imei: typeof body.imei === 'string' ? body.imei || null : undefined,
         reference_number: typeof body.reference_number === 'string' ? body.reference_number || null : undefined,
         co_name: typeof body.co_name === 'string' ? body.co_name || null : undefined,

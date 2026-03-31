@@ -41,6 +41,8 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
   const [emiAmount, setEmiAmount] = useState<string>('')
 
   const [deviceName, setDeviceName] = useState('')
+  const [deviceAmount, setDeviceAmount] = useState<string>('')
+  const [accessoriesAmount, setAccessoriesAmount] = useState<string>('0')
   const [imei, setImei] = useState('')
   const [referenceNumber, setReferenceNumber] = useState('')
 
@@ -136,6 +138,8 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
     const loanAmountNum = Number(loanAmount)
     const tenureNum = Number(tenureMonths)
     const emiAmountNum = Number(emiAmount)
+    const deviceAmountNum = Number(deviceAmount)
+    const accessoriesAmountNum = Number(accessoriesAmount)
 
     if (!loanAmountNum || loanAmountNum < 1) {
       setError('Loan amount must be at least 1.')
@@ -147,6 +151,14 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
     }
     if (!tenureNum || tenureNum < 1 || tenureNum > 24) {
       setError('Tenure must be between 1 and 24 months.')
+      return
+    }
+    if (Number.isNaN(deviceAmountNum) || deviceAmountNum < 0) {
+      setError('Device amount must be 0 or more.')
+      return
+    }
+    if (Number.isNaN(accessoriesAmountNum) || accessoriesAmountNum < 0) {
+      setError('Accessories amount must be 0 or more.')
       return
     }
 
@@ -164,6 +176,8 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
           tenure_months: tenureNum,
           emi_amount: emiAmountNum,
           device_name: deviceName.trim(),
+          device_amount: deviceAmountNum,
+          accessories_amount: accessoriesAmountNum,
           imei: imei.trim() || null,
           reference_number: referenceNumber.trim() || null,
           co_name: careOfOpen && coName.trim() ? coName.trim() : null,
@@ -293,6 +307,30 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
                     <div className="space-y-1.5">
                       <Label htmlFor="device-name">Device name</Label>
                       <Input id="device-name" value={deviceName} onChange={(e) => setDeviceName(e.target.value)} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="device-amount">Device amount</Label>
+                      <Input
+                        id="device-amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={deviceAmount}
+                        onChange={(e) => setDeviceAmount(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="accessories-amount">Accessories amount</Label>
+                      <Input
+                        id="accessories-amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={accessoriesAmount}
+                        onChange={(e) => setAccessoriesAmount(e.target.value)}
+                        required
+                      />
                     </div>
                     <div className="space-y-2">
                       <ImeiScanner value={imei} onChange={setImei} />

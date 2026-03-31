@@ -116,6 +116,8 @@ export async function POST(request: Request) {
         tenure_months: body.tenure_months,
         emi_amount: body.emi_amount,
         device_name: body.device_name,
+        device_amount: body.device_amount,
+        accessories_amount: body.accessories_amount,
         imei: body.imei || null,
         reference_number: body.reference_number || null,
         co_name: body.co_name || null,

@@ -12,6 +12,8 @@ export const saleSchema = z.object({
                               .int('Tenure must be a whole number'),
   emi_amount:               z.coerce.number().min(1),
   device_name:              z.string().min(1, 'Device name is required'),
+  device_amount:            z.coerce.number().min(0),
+  accessories_amount:       z.coerce.number().min(0),
   imei:                     z.string().optional(),
   reference_number:         z.string().optional(),
   co_name:                  z.string().optional(),

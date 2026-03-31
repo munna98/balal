@@ -95,6 +95,8 @@ model Sale {
   emi_amount       Decimal
 
   device_name      String
+  device_amount    Decimal  @default(0)
+  accessories_amount Decimal @default(0)
   imei             String?
   reference_number String?
 

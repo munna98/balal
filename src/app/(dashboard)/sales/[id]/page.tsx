@@ -140,6 +140,14 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
                   <TableCell className="py-2 font-medium">{sale.device_name}</TableCell>
                 </TableRow>
                 <TableRow>
+                  <TableCell className="py-2 pr-4 text-muted-foreground">Device amount</TableCell>
+                  <TableCell className="py-2 font-medium">{toNumber(sale.device_amount).toFixed(2)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="py-2 pr-4 text-muted-foreground">Accessories amount</TableCell>
+                  <TableCell className="py-2 font-medium">{toNumber(sale.accessories_amount).toFixed(2)}</TableCell>
+                </TableRow>
+                <TableRow>
                   <TableCell className="py-2 pr-4 text-muted-foreground">IMEI</TableCell>
                   <TableCell className="py-2 font-medium">{sale.imei || '-'}</TableCell>
                 </TableRow>
