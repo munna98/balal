@@ -73,7 +73,7 @@ export function buildSaleWhatsAppMessage(input: SaleWhatsAppMessageInput) {
   }
 
   lines.push('')
-  lines.push(input.shopName ? `Thank you from "${input.shopName}"` : 'Thank you.')
+  lines.push(input.shopName ? `Thank you for choosing ${input.shopName}` : 'Thank you.')
 
   return lines.join('\n')
 }
