@@ -48,6 +48,9 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
 
   const [notes, setNotes] = useState('')
 
+  const financeTotal = (Number(downPayment) || 0) + (Number(loanAmount) || 0)
+  const productTotal = (Number(deviceAmount) || 0) + (Number(accessoriesAmount) || 0)
+
   useEffect(() => {
     async function loadSale() {
       try {
@@ -207,7 +210,7 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
         <CardContent>
           <form className="space-y-6" onSubmit={handleSubmit}>
             <section className="space-y-2">
-              <Label>Customer (changing customer is restricted via UI, currently disabled)</Label>
+              <Label>Customer (changing customer is restricted )</Label>
               <Input
                 placeholder="Customer"
                 value={customerQuery}
@@ -227,28 +230,37 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
                       <Label htmlFor="loan-issue-date">Loan date</Label>
                       <Input id="loan-issue-date" type="date" value={loanIssueDate} onChange={(e) => setLoanIssueDate(e.target.value)} />
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="down-payment">Down payment</Label>
-                      <Input
-                        id="down-payment"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={downPayment}
-                        onChange={(e) => setDownPayment(e.target.value)}
-                      />
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="down-payment">Down payment</Label>
+                        <Input
+                          id="down-payment"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={downPayment}
+                          onChange={(e) => setDownPayment(e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="loan-amount">Loan amount</Label>
+                        <Input
+                          id="loan-amount"
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          value={loanAmount}
+                          onChange={(e) => setLoanAmount(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="loan-amount">Loan amount</Label>
-                      <Input
-                        id="loan-amount"
-                        type="number"
-                        min="1"
-                        step="0.01"
-                        value={loanAmount}
-                        onChange={(e) => setLoanAmount(e.target.value)}
-                        required
-                      />
+                    <div className="rounded-md border bg-muted/40 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span className="text-muted-foreground">Total</span>
+                        <span className="font-medium">{financeTotal.toFixed(2)}</span>
+                      </div>
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="tenure">Tenure (months)</Label>
@@ -260,6 +272,7 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
                         step="1"
                         value={tenureMonths}
                         onChange={(e) => setTenureMonths(e.target.value)}
+                        placeholder="Enter months"
                         required
                       />
                       <p className="text-xs text-muted-foreground">Tenure must be between 1 and 24 months.</p>
@@ -312,8 +325,14 @@ export default function EditSalePage(props: { params: Promise<{ id: string }> })
                           step="0.01"
                           value={accessoriesAmount}
                           onChange={(e) => setAccessoriesAmount(e.target.value)}
-                          required
+                          placeholder="0"
                         />
+                      </div>
+                    </div>
+                    <div className="rounded-md border bg-muted/40 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span className="text-muted-foreground">Total</span>
+                        <span className="font-medium">{productTotal.toFixed(2)}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
