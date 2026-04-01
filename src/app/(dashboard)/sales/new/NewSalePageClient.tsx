@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { MessageCircle, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,6 +16,7 @@ import { useActiveShop, useTenantFromDashboard } from '@/components/layout/activ
 import { BackButton } from '@/components/shared/BackButton'
 import { CustomerLookupField, type CustomerLookupItem } from '@/components/customers/CustomerLookupField'
 import { ResponsiveSheetDrawer } from '@/components/shared/ResponsiveSheetDrawer'
+import { buildSaleWhatsAppMessage, buildWhatsAppShareUrl, isShareableWhatsAppNumber } from '@/lib/whatsapp'
 
 export default function NewSalePageClient({ customers }: { customers: CustomerLookupItem[] }) {
   const router = useRouter()
@@ -137,6 +138,9 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
       return
     }
 
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
+    const shouldShareOnWhatsApp = submitter?.value === 'share'
+
     const downPaymentNum = Number(downPayment)
     const loanAmountNum = Number(loanAmount)
     const tenureNum = Number(tenureMonths)
@@ -167,6 +171,12 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
 
     setLoading(true)
     try {
+      let pendingShareWindow: Window | null = null
+
+      if (shouldShareOnWhatsApp) {
+        pendingShareWindow = window.open('', '_blank', 'noopener,noreferrer')
+      }
+
       const res = await fetch('/api/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -193,8 +203,41 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
 
       const json = await res.json()
       if (!res.ok || !json.data?.id) {
+        pendingShareWindow?.close()
         setError(json.error || 'Failed to create sale.')
         return
+      }
+
+      if (shouldShareOnWhatsApp) {
+        if (!isShareableWhatsAppNumber(selectedCustomer.mobile1)) {
+          pendingShareWindow?.close()
+          setError('Sale saved, but customer mobile number is not valid for WhatsApp sharing.')
+          router.push(`/sales/${json.data.id}`)
+          return
+        }
+
+        const message = buildSaleWhatsAppMessage({
+          customerName: selectedCustomer.name,
+          shopName: activeShop.name,
+          shopPhone: activeShop.phone,
+          loanIssueDate,
+          deviceName: deviceName.trim(),
+          deviceAmount: deviceAmountNum,
+          accessoriesAmount: accessoriesAmountNum,
+          downPayment: downPaymentNum || 0,
+          loanAmount: loanAmountNum,
+          emiAmount: emiAmountNum,
+          tenureMonths: tenureNum,
+          imei: imei.trim() || null,
+          referenceNumber: referenceNumber.trim() || null,
+        })
+        const shareUrl = buildWhatsAppShareUrl(selectedCustomer.mobile1, message)
+
+        if (pendingShareWindow) {
+          pendingShareWindow.location.href = shareUrl
+        } else {
+          window.open(shareUrl, '_blank', 'noopener,noreferrer')
+        }
       }
 
       router.push(`/sales/${json.data.id}`)
@@ -416,9 +459,22 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Saving...' : 'Create Sale'}
-            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button type="submit" name="submitAction" value="save" className="flex-1" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Sale'}
+              </Button>
+              <Button
+                type="submit"
+                name="submitAction"
+                value="share"
+                variant="outline"
+                className="flex-1 border-green-600 text-green-700 hover:bg-green-50 hover:text-green-800"
+                disabled={loading}
+              >
+                <MessageCircle className="mr-2 size-4" />
+                {loading ? 'Saving...' : 'Save & Share on WhatsApp'}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -8,6 +8,8 @@ import { AddPaymentDialog } from '@/components/payments/AddPaymentDialog'
 import { PaymentLedger } from '@/components/payments/PaymentLedger'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BackButton } from '@/components/shared/BackButton'
+import { Button } from '@/components/ui/button'
+import { buildSaleWhatsAppMessage, buildWhatsAppShareUrl, isShareableWhatsAppNumber } from '@/lib/whatsapp'
 
 function toNumber(value: unknown) {
   if (typeof value === 'number') return value
@@ -55,6 +57,28 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
   const totalPaid = paymentsForUI.reduce((sum, a) => sum + (a.amount_paid as number), 0)
   const totalRepaid = paymentsForUI.reduce((sum, a) => sum + ((a.amount_repaid as number | null) || 0), 0)
   const paymentBalance = totalPaid - totalRepaid
+  const customerMobile = sale.customer.mobile1
+  const canShareOnWhatsApp = isShareableWhatsAppNumber(customerMobile)
+  const whatsappShareUrl = canShareOnWhatsApp
+    ? buildWhatsAppShareUrl(
+        customerMobile,
+        buildSaleWhatsAppMessage({
+          customerName: sale.customer.name,
+          shopName: sale.shop.name,
+          shopPhone: sale.shop.phone,
+          loanIssueDate: sale.loan_issue_date,
+          deviceName: sale.device_name,
+          deviceAmount: toNumber(sale.device_amount),
+          accessoriesAmount: toNumber(sale.accessories_amount),
+          downPayment: toNumber(sale.down_payment),
+          loanAmount: toNumber(sale.loan_amount),
+          emiAmount: toNumber(sale.emi_amount),
+          tenureMonths: sale.tenure_months,
+          imei: sale.imei,
+          referenceNumber: sale.reference_number,
+        })
+      )
+    : null
 
   const secondPartyEnabled = Boolean(sale.is_second_party && sale.second_party_customer)
   const secondParty = sale.second_party_customer
@@ -86,6 +110,15 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
 
         <div className="flex flex-col items-start gap-3 md:items-end">
           <AddPaymentDialog saleId={sale.id} shopId={sale.shop_id} />
+          {whatsappShareUrl ? (
+            <Button asChild variant="outline" className="border-green-600 text-green-700 hover:bg-green-50 hover:text-green-800">
+              <a href={whatsappShareUrl} target="_blank" rel="noreferrer">
+                Share on WhatsApp
+              </a>
+            </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground">Customer mobile number is not valid for WhatsApp sharing.</p>
+          )}
         </div>
       </div>
 
