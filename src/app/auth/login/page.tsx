@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { APP_NAME } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -28,9 +29,8 @@ export default function LoginPage() {
       password,
     })
 
-    setIsLoading(false)
-
     if (error) {
+      setIsLoading(false)
       setErrorMessage(error.message)
       return
     }
@@ -73,7 +73,14 @@ export default function LoginPage() {
             </div>
             {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                'Sign in'
+              )}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
