@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { APP_NAME } from '@/lib/constants'
@@ -18,6 +18,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    function resetFormState() {
+      setIsLoading(false)
+    }
+
+    resetFormState()
+    window.addEventListener('pageshow', resetFormState)
+
+    return () => {
+      window.removeEventListener('pageshow', resetFormState)
+    }
+  }, [])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -35,7 +48,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    router.replace('/dashboard')
     router.refresh()
   }
 
