@@ -174,7 +174,7 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
       let pendingShareWindow: Window | null = null
 
       if (shouldShareOnWhatsApp) {
-        pendingShareWindow = window.open('', '_blank', 'noopener,noreferrer')
+        pendingShareWindow = window.open('about:blank', '_blank')
       }
 
       const res = await fetch('/api/sales', {
@@ -233,8 +233,9 @@ export default function NewSalePageClient({ customers }: { customers: CustomerLo
         })
         const shareUrl = buildWhatsAppShareUrl(selectedCustomer.mobile1, message)
 
-        if (pendingShareWindow) {
-          pendingShareWindow.location.href = shareUrl
+        if (pendingShareWindow && !pendingShareWindow.closed) {
+          pendingShareWindow.location.replace(shareUrl)
+          pendingShareWindow.focus()
         } else {
           window.open(shareUrl, '_blank', 'noopener,noreferrer')
         }

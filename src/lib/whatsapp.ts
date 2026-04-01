@@ -68,15 +68,12 @@ export function buildSaleWhatsAppMessage(input: SaleWhatsAppMessageInput) {
     lines.push(`Reference no: ${input.referenceNumber}`)
   }
 
-  if (input.shopName) {
-    lines.push(`Shop: ${input.shopName}`)
-  }
-
   if (input.shopPhone) {
     lines.push(`Shop contact: ${input.shopPhone}`)
   }
 
-  lines.push('', 'Thank you.')
+  lines.push('')
+  lines.push(input.shopName ? `Thank you from "${input.shopName}"` : 'Thank you.')
 
   return lines.join('\n')
 }
