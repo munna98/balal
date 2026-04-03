@@ -7,7 +7,6 @@ const plans = [
     cadence: '/ month',
     description: 'Flexible, pay-as-you-go access.',
     footnote: 'No credit card required.',
-    accent: 'from-violet-500 to-indigo-500',
     featured: false,
     features: [
       '1-Click WhatsApp Reminders',
@@ -22,12 +21,11 @@ const plans = [
     ],
   },
   {
-    name: 'Yearly Plan (Best Value)',
+    name: 'Yearly Plan',
     price: '₹3,999',
     cadence: '/ year',
     description: '2 Months Free — Our most popular plan.',
     footnote: 'Save ₹789 compared to monthly.',
-    accent: 'from-amber-500 via-orange-500 to-rose-500',
     featured: true,
     features: [
       '1-Click WhatsApp Reminders',
@@ -59,17 +57,17 @@ export default function PricingSection() {
           </p>
         </div>
 
-        <div className="grid max-w-6xl mx-auto gap-8 lg:grid-cols-2">
+        <div className="grid max-w-4xl mx-auto gap-6 lg:grid-cols-2 lg:items-center">
           {plans.map((plan) => (
             <div
               key={plan.name}
               className={`relative overflow-hidden rounded-3xl border bg-white shadow-xl shadow-gray-100/60 dark:bg-gray-900 dark:shadow-black/30 ${
                 plan.featured
-                  ? 'border-orange-200 dark:border-orange-400/30 lg:-translate-y-2'
+                  ? 'border-gray-100 dark:border-white/10 lg:scale-[1.04]'
                   : 'border-gray-100 dark:border-white/10'
               }`}
             >
-              <div className={`h-1.5 w-full bg-gradient-to-r ${plan.accent}`} />
+              <div className="h-1.5 w-full bg-gradient-to-r from-violet-500 to-indigo-500" />
 
               <div className="p-8">
                 <div className="mb-6 flex items-start justify-between gap-4">
@@ -99,10 +97,6 @@ export default function PricingSection() {
                 </div>
 
                 <div className="mb-6 h-px bg-gray-100 dark:bg-white/10" />
-
-                <div className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
-                  Features Included:
-                </div>
 
                 <ul className="mb-8 space-y-3">
                   {plan.features.map((item) => (
