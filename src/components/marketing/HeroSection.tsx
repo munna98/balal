@@ -25,7 +25,7 @@ function MockupCard() {
             </div>
           </div>
           <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${RISK_COLORS['Safe']}`}>
-            ✓ Safe
+            Safe
           </span>
         </div>
 
@@ -36,17 +36,17 @@ function MockupCard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">I Phone 16 Pro</p>
-              <p className="text-xs text-gray-500 mt-0.5">IMEI: 867323•••6472</p>
+              <p className="text-xs text-gray-500 mt-0.5">IMEI: 867323...6472</p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold text-violet-700 dark:text-violet-400">₹21,999</p>
+              <p className="text-sm font-bold text-violet-700 dark:text-violet-400">Rs21,999</p>
               <p className="text-xs text-gray-400">Bajaj EMI</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2 pt-1">
             {[
               { label: 'Tenure', value: '12 mo' },
-              { label: 'Down Pay', value: '₹2,000' },
+              { label: 'Down Pay', value: 'Rs2,000' },
               { label: 'Status', value: 'Active' },
             ].map((item) => (
               <div key={item.label} className="bg-gray-50 dark:bg-white/5 rounded-lg p-2 text-center">
@@ -62,7 +62,7 @@ function MockupCard() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Payment Balance</p>
-            <span className="text-xs font-bold text-emerald-600">+₹500</span>
+            <span className="text-xs font-bold text-emerald-600">+Rs500</span>
           </div>
           <div className="flex gap-1.5">
             {[true, true, false, false, false].map((paid, i) => (
@@ -77,7 +77,7 @@ function MockupCard() {
       </div>
 
       <div className="absolute -bottom-3 -right-3 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-white/10 px-3 py-2 flex items-center gap-2">
-        <span className="text-base">🛡️</span>
+        <span className="text-base">Alert</span>
         <div>
           <p className="text-xs font-bold text-gray-800 dark:text-white">Fraud Alert</p>
           <p className="text-xs text-gray-400">0 flagged</p>
@@ -102,16 +102,15 @@ export default function HeroSection() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white leading-[1.1] tracking-tight mb-5">
-              Stop managing{' '}
+              Stop losing money to bad{' '}
               <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
-                Bajaj EMI sales
-              </span>{' '}
-              on paper
+                Bajaj EMI sales.
+              </span>
             </h1>
 
             <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed mb-8">
-              Balal Finance helps mobile retailers track EMI sales, customer
-              history, and payment tracking — all in one place.
+              Replace your paper diary with Balal Finance to track Bajaj sales,
+              identify high-risk customers, and never miss a collection.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-4">
