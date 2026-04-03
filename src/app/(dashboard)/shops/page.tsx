@@ -4,6 +4,7 @@ import { MapPin, Phone, ShoppingBag, Store, TrendingUp, ChevronRight } from 'luc
 import { prisma } from '@/lib/prisma'
 import { getTenantShopsAndActiveShop } from '@/lib/server/dashboard'
 import { Badge } from '@/components/ui/badge'
+import { AddShopButton } from '@/components/shops/AddShopButton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -61,26 +62,14 @@ export default async function ShopsPage() {
             Manage locations, switch workspace, and see sales at a glance.
           </p>
         </div>
-        {atShopLimit ? (
-          <Button type="button" disabled>
-            Add shop
-          </Button>
-        ) : (
-          <Button asChild>
-            <Link href="/shops/new">Add shop</Link>
-          </Button>
-        )}
+        <AddShopButton atShopLimit={atShopLimit} shopLimit={tenant.shop_limit} />
       </div>
 
-      {atShopLimit ? (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-          You are using all {tenant.shop_limit} shop slot{tenant.shop_limit === 1 ? '' : 's'} on your plan. Contact support to add more.
-        </p>
-      ) : (
+      {!atShopLimit ? (
         <p className="text-xs text-muted-foreground">
           {slotsLeft} shop slot{slotsLeft === 1 ? '' : 's'} remaining on your plan.
         </p>
-      )}
+      ) : null}
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card size="sm">

@@ -9,7 +9,9 @@ import { PaymentLedger } from '@/components/payments/PaymentLedger'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BackButton } from '@/components/shared/BackButton'
 import { Button } from '@/components/ui/button'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { buildSaleWhatsAppMessage, buildWhatsAppShareUrl, isShareableWhatsAppNumber } from '@/lib/whatsapp'
+import { Wallet } from 'lucide-react'
 
 function toNumber(value: unknown) {
   if (typeof value === 'number') return value
@@ -231,7 +233,21 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
           <CardTitle className="text-sm text-muted-foreground">Payment ledger</CardTitle>
         </CardHeader>
         <CardContent>
-          <PaymentLedger payments={paymentsForUI} />
+          {paymentsForUI.length > 0 ? (
+            <PaymentLedger payments={paymentsForUI} />
+          ) : (
+            <Empty className="rounded-lg border border-dashed bg-muted/20">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Wallet />
+                </EmptyMedia>
+                <EmptyTitle>No payments recorded yet</EmptyTitle>
+                <EmptyDescription>
+                  This customer has not made any payments for this sale yet. Add the first payment to start the ledger.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
         </CardContent>
       </Card>
     </main>
