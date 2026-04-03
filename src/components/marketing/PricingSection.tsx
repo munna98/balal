@@ -115,10 +115,7 @@ export default function PricingSection() {
 
                 <Link
                   href="/auth/signup"
-                  className={`block w-full rounded-xl px-6 py-3 text-center font-semibold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 ${
-                    plan.featured
-                      ? 'bg-orange-500 shadow-lg shadow-orange-100 hover:bg-orange-600 dark:shadow-orange-900/30'
-                      : 'bg-violet-600 shadow-lg shadow-violet-100 hover:bg-violet-700 dark:shadow-violet-900/30'
+                  className={`block w-full rounded-xl px-6 py-3 text-center font-semibold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 'bg-violet-600 shadow-lg shadow-violet-100 hover:bg-violet-700 dark:shadow-violet-900/30'
                   }`}
                 >
                   Start 14-Day Free Trial
