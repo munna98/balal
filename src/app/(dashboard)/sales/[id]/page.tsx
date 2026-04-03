@@ -243,7 +243,7 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
                 </EmptyMedia>
                 <EmptyTitle>No payments recorded yet</EmptyTitle>
                 <EmptyDescription>
-                  This customer has not made any payments for this sale yet. Add the first payment to start the ledger.
+                  We didn't record any payments for this sale yet. Add the first payment to start the ledger.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
