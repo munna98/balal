@@ -3,7 +3,7 @@ import Link from 'next/link'
 const plans = [
   {
     name: 'Monthly Plan',
-    price: '₹399',
+    price: '\u20b9399',
     cadence: '/ month',
     description: 'Flexible, pay-as-you-go access.',
     footnote: 'No credit card required.',
@@ -22,10 +22,10 @@ const plans = [
   },
   {
     name: 'Yearly Plan',
-    price: '₹3,999',
+    price: '\u20b93,999',
     cadence: '/ year',
-    description: '2 Months Free — Our most popular plan.',
-    footnote: 'Save ₹789 compared to monthly.',
+    description: '2 Months Free \u2014 Our most popular plan.',
+    footnote: 'Save \u20b9789 compared to monthly.',
     featured: true,
     features: [
       '1-Click WhatsApp Reminders',
@@ -115,8 +115,7 @@ export default function PricingSection() {
 
                 <Link
                   href="/auth/signup"
-                  className={`block w-full rounded-xl px-6 py-3 text-center font-semibold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 'bg-violet-600 shadow-lg shadow-violet-100 hover:bg-violet-700 dark:shadow-violet-900/30'
-                  }`}
+                  className="block w-full rounded-xl bg-violet-600 px-6 py-3 text-center font-semibold text-white shadow-lg shadow-violet-100 transition-all hover:-translate-y-0.5 hover:bg-violet-700 active:translate-y-0 dark:shadow-violet-900/30"
                 >
                   Start 14-Day Free Trial
                 </Link>
