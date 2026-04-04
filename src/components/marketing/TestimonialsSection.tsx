@@ -4,9 +4,9 @@ const testimonials = [
   {
     quote:
       "Before Balal Finance, I used to keep all my EMI sales in a diary. I lost track of who owed me what. Now everything is in one place and I can check any customer's history in seconds.",
-    name: 'Muhammed Rashid',
-    shop: 'Al Ameen Mobiles, Malappuram',
-    initials: 'MR',
+    name: 'Faisal Babu',
+    shop: 'Izone, Kondotty',
+    initials: 'FB',
     color: 'bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300',
   },
   {
@@ -20,9 +20,9 @@ const testimonials = [
   {
     quote:
       "The Payment tracker is exactly what I needed. I used to forget how much extra I paid for customers' EMIs and then struggle to collect. Now I just open the app and it's all there.",
-    name: 'Faisal Rahman K.',
+    name: 'Joyel Joseph',
     shop: 'City Mobile, Thrissur',
-    initials: 'FR',
+    initials: 'jj',
     color: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
   },
 ]
