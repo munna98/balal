@@ -14,6 +14,7 @@ import { useTenantFromDashboard } from '@/components/layout/active-shop-context'
 import { CustomerPhotoPicker } from '@/components/customers/CustomerPhotoPicker'
 import { Input } from '@/components/ui/input'
 import { formatAadhaarInput, normalizeAadhaarInput } from '@/lib/aadhaar'
+import { AadhaarScanner } from '@/components/customers/AadhaarScanner'
 
 import type { RiskLevelKey } from '@/types'
 
@@ -190,7 +191,15 @@ export default function NewCustomerPage() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="customer-aadhaar">Aadhaar (optional)</Label>
+                <div className="flex items-center justify-between h-7">
+                  <Label htmlFor="customer-aadhaar">Aadhaar (optional)</Label>
+                  <AadhaarScanner 
+                    onScan={({ name: scannedName, aadhaar: scannedAadhaar }) => {
+                      if (scannedName && !name) setName(scannedName)
+                      if (scannedAadhaar) setAadhaar(scannedAadhaar)
+                    }} 
+                  />
+                </div>
                 <Input
                   id="customer-aadhaar"
                   value={formatAadhaarInput(aadhaar)}
