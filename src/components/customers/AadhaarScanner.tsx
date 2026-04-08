@@ -12,13 +12,50 @@ export function AadhaarScanner({ onScan }: AadhaarScannerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    let file = event.target.files?.[0]
     if (!file) return
 
     setIsScanning(true)
     try {
+      // Resize image to max 1000px to speed up OCR significantly on mobile
+      file = await new Promise<File>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const img = new Image()
+          img.onload = () => {
+            const canvas = document.createElement('canvas')
+            const MAX_SIZE = 1000
+            let { width, height } = img
+            if (width > height) {
+              if (width > MAX_SIZE) {
+                height *= MAX_SIZE / width
+                width = MAX_SIZE
+              }
+            } else {
+              if (height > MAX_SIZE) {
+                width *= MAX_SIZE / height
+                height = MAX_SIZE
+              }
+            }
+            canvas.width = width
+            canvas.height = height
+            const ctx = canvas.getContext('2d')
+            ctx?.drawImage(img, 0, 0, width, height)
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(new File([blob], file!.name, { type: 'image/jpeg' }))
+              } else {
+                resolve(file!)
+              }
+            }, 'image/jpeg', 0.8)
+          }
+          img.src = e.target?.result as string
+        }
+        reader.readAsDataURL(file as File)
+      })
+
       const result = await Tesseract.recognize(file, 'eng', {
-        logger: (m: any) => console.log(m),
+        logger: (m: any) => console.log(m.status, m.progress),
       })
       
       const text = result.data.text
@@ -34,32 +71,37 @@ export function AadhaarScanner({ onScan }: AadhaarScannerProps) {
         if (aadhaarMatch12) aadhaar = aadhaarMatch12[0]
       }
 
-      // 2. Extract Name (Heuristic: usually the line above DOB or Year of Birth)
+      // 2. Extract Name (Broader Heuristic)
       const lines = text.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0)
       for (let i = 0; i < lines.length; i++) {
         const lowerLine = lines[i].toLowerCase()
+        const isDatePattern = /\d{2}\/\d{2}\/\d{4}/.test(lowerLine) || /\b(?:19|20)\d{2}\b/.test(lowerLine)
+        
         if (
           lowerLine.includes('dob') ||
           lowerLine.includes('year of birth') ||
-          lowerLine.includes('yob')
+          lowerLine.includes('yob') ||
+          isDatePattern ||
+          lowerLine.includes('male') ||
+          lowerLine.includes('female')
         ) {
-          // Look at previous line for English Name
-          if (i > 0) {
-            let possibleName = lines[i - 1]
-            // Sometimes previous line is Hindi Name, and English name is above it.
-            // A simple heuristic: check if it has valid english alphabets and no digits
-            possibleName = possibleName.replace(/[^a-zA-Z\s]/g, '').trim()
-            if (possibleName.length > 2) {
-              name = possibleName
-            } else if (i > 1) {
-              // Try one more line above
-              possibleName = lines[i - 2].replace(/[^a-zA-Z\s]/g, '').trim()
-              if (possibleName.length > 2) {
+          // Check up to 2 lines above
+          for (let j = 1; j <= 2; j++) {
+            if (i - j >= 0) {
+              let possibleName = lines[i - j]
+              possibleName = possibleName.replace(/[^a-zA-Z\s]/g, '').trim()
+              if (
+                possibleName.length > 2 && 
+                !possibleName.toLowerCase().includes('government') &&
+                !possibleName.toLowerCase().includes('india') &&
+                !possibleName.toLowerCase().includes('father')
+              ) {
                 name = possibleName
+                break
               }
             }
           }
-          break
+          if (name) break
         }
       }
 
